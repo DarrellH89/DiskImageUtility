@@ -1,0 +1,10 @@
+G:\Dev\Github\DiskUtility\DiskUtility\bin\Release\DiskUtility.exe
+G:\Dev\Github\DiskUtility\DiskUtility\bin\Release\DiskUtility.pdb
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.csprojAssemblyReference.cache
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.Form1.resources
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.Form5.resources
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.Properties.Resources.resources
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.csproj.GenerateResource.cache
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.csproj.CoreCompileInputs.cache
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.exe
+G:\Dev\Github\DiskUtility\DiskUtility\obj\Release\DiskUtility.pdb
