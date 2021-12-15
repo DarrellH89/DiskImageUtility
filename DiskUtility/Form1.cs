@@ -74,7 +74,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.1c Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.1d Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -333,13 +333,17 @@ namespace DiskUtility
         {
             var sectorSizeList = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192 }; // IMD values
             int result = 0;
+            int H8DCount = 0;
             // int diskType = 0;
             var encoding = new UTF8Encoding();
             if (listBoxImages.SelectedIndex != -1)
                 foreach (var lb in listBoxImages.SelectedItems)
                 {
+                    if (lb.ToString().ToUpper().EndsWith(".H8D")) 
+                        H8DCount++;
                     if (lb.ToString().ToUpper().EndsWith(".IMD") || lb.ToString().ToUpper().EndsWith(".H37")
                                                                  || lb.ToString().ToUpper().EndsWith(".IMG"))
+                                                          //       || lb.ToString().ToUpper().EndsWith(".H8D")) // no need, HxCFloppy works with H8D
                     {
                         var fileType = lb.ToString().ToUpper().EndsWith(".IMD"); // test for IMD file
                         // read entire file into memory
@@ -366,11 +370,11 @@ namespace DiskUtility
 
                         // create output file
                         int wBufPtr = 0, bufPtr = 0, firstSector = 0;
-                        if (fileType) // convert IMD to H37, Z100, or Z80
+                        if (fileType) // convert IMD to IMG for H89, Z100, or Small Z80
                         {
                             diskFileName = diskFileName.Replace(".IMD", ".IMG");
                             if (diskFileName.Contains(".H37"))
-                                diskFileName = diskFileName.Replace(".H37", "");
+                                diskFileName = diskFileName.Replace(".H37", "");  // dropping old H37 designation
                         }
                         else
                         {
@@ -455,8 +459,9 @@ namespace DiskUtility
                                             bufPtr++;
                                             break;
                                         default:
-                                            MessageBox.Show("IMD sector marker out of scope", "Error",
-                                                MessageBoxButtons.OK);
+                                            MessageBox.Show("IMD sector marker out of scope" + buf[bufPtr].ToString("X2") 
+                                                            + " at location " + bufPtr.ToString("X8"), "Error",
+                                                            MessageBoxButtons.OK);
                                             bufPtr = fileLen; // stop processing due to file error
                                             break;
                                     }
@@ -521,8 +526,10 @@ namespace DiskUtility
                                 ctr = putCPM.DiskTypeCheck(ref buf, fileLen, diskFileName.ToUpper().EndsWith("IMG"));
                                 if (ctr != putCPM.DiskType.GetLength(0))
                                 {
-
-                                    intLv = 1; // interleave
+                                    if(lb.ToString().ToUpper().Contains(".IMG"))
+                                        intLv = 1; // interleave
+                                      else
+                                        intLv = putCPM.DiskType[ctr, 5];
                                     spt = putCPM.DiskType[ctr, 6]; // sectors per track  
                                     sectorSize = putCPM.DiskType[ctr, 7]; // sector size
                                     diskHeads = putCPM.DiskType[ctr, 9];
@@ -567,6 +574,11 @@ namespace DiskUtility
                                 wbuf[wBufPtr++] = cylinder;
                                 if (diskHeads > 1)
                                     wbuf[wBufPtr++] = head++;
+                                else
+                                {
+                                    wbuf[wBufPtr++] = head;
+                                    cylinder++;                 // increment cylinder every pass since there is only one head
+                                }
                                 wbuf[wBufPtr++] = (byte) spt;
                                 wbuf[wBufPtr++] = imdSectorIndex;
                                 for (ctr = 0; ctr < skewMap.Length; ctr++) // write sector order for track
@@ -581,11 +593,12 @@ namespace DiskUtility
 
                                 bin_out.Write(wbuf, 0, wBufPtr);
                                 wBufPtr = 0;
-                                if (head > 1)
+                                if (head > 1)           // reset head value and increment cylinder
                                 {
                                     cylinder++;
                                     head = 0;
                                 }
+
                             }
 
                             bin_out.Close();
@@ -598,6 +611,10 @@ namespace DiskUtility
 
                 } 
                 var resultStr = string.Format("{0} Disks converted.", result);
+                if (H8DCount > 0)
+                    resultStr += string.Format(" No need to convert {0} H8D files. They are supported by HxCFloppy", H8DCount);
+      
+                
 
                 if (result == 1) 
                     resultStr = resultStr.Replace("ks", "k");
@@ -1016,11 +1033,12 @@ namespace DiskUtility
                         {
 
                             var getCpm = new CPMFile();
-                            var intLv = getCpm.DiskType[8, 5];
-                            var spt = getCpm.DiskType[8, 6];
-                            var sectSize = getCpm.DiskType[8, 7];
-                            var skew = getCpm.BuildSkew(intLv, spt, getCpm.DiskType[8, 10]);
+                            var intLv = getCpm.DiskType[getCpm.DiskType.GetLength(0)-1, 5];
+                            var spt = getCpm.DiskType[getCpm.DiskType.GetLength(0)-1, 6];
+                            var sectSize = getCpm.DiskType[getCpm.DiskType.GetLength(0)-1, 7];
+                            var skew = getCpm.BuildSkew(intLv, spt, getCpm.DiskType[getCpm.DiskType.GetLength(0)-1, 10]);
                             int sector = 0;
+                            buf[5] = 0x60;      // Set disk type marker for SSDD
 
                             while (rBufPtr < fileLen)
                             {

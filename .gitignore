@@ -1,3 +1,8 @@
-.vs
-DiskUtility/obj/
-DiskUtility/bin/
+.vs/
+DiskUtility/obj/*
+DiskUtility/bin/*
+!/DiskUtility/bin/Release/*.cfg
+!/DiskUtility/bin/Release/*.img
+!/DiskUtility/bin/Release/*.exe
+!/DiskUtility/bin/Release/*.zip
+

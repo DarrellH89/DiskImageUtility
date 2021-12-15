@@ -150,9 +150,9 @@ namespace DiskUtility
             // 
             this.BtnImdConvert.Location = new System.Drawing.Point(702, 539);
             this.BtnImdConvert.Name = "BtnImdConvert";
-            this.BtnImdConvert.Size = new System.Drawing.Size(85, 22);
+            this.BtnImdConvert.Size = new System.Drawing.Size(106, 22);
             this.BtnImdConvert.TabIndex = 8;
-            this.BtnImdConvert.Text = "IMD Convert";
+            this.BtnImdConvert.Text = "IMD/IMG Convert";
             this.BtnImdConvert.UseVisualStyleBackColor = true;
             this.BtnImdConvert.Click += new System.EventHandler(this.BtnImdConvert_click);
             // 
@@ -226,9 +226,9 @@ namespace DiskUtility
             // 
             this.button1.Location = new System.Drawing.Point(702, 567);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(85, 22);
+            this.button1.Size = new System.Drawing.Size(106, 22);
             this.button1.TabIndex = 21;
-            this.button1.Text = "H8D Convert";
+            this.button1.Text = "H8D Convert to SS";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.BtnH8dConvert_Click);
             // 

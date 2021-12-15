@@ -80,7 +80,7 @@ namespace CPM
             {0x23, 0x800, 0x2000, 1, 0x2000, 1, 8, 0x200, 40, 2, 0}, //   4 320k Z100 48tpi DD DS
             {0x62, 0x400, 0x1000, 1, 0x2000, 3, 16, 0x100, 40, 1, 12}, // 5 160k H37 48tpi DD SS
             {0x63, 0x800, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   6 320k H37 48tpi DD DS
-            {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 3}, //   7 100k H37 48tpi DD SS
+            {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   7 100k H37 48tpi DD SS
             {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   8 100k Default H17 48tpi SD SS
             {0x00, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   9 100k Default H17 48tpi SD SS
 
@@ -214,12 +214,13 @@ namespace CPM
             var sectorSizeList = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192 }; // IMD values
             var result = 0;
             var encoding = new UTF8Encoding();
+            var fileLen = 0;
 
             if (diskFileName != DiskImageImdActive) // check if data already in memory
             {
                 var file = File.OpenRead(diskFileName); // read entire file into an array of byte
                 var fileByte = new BinaryReader(file);
-                var fileLen = (int)file.Length;
+                fileLen = (int)file.Length;
                 //byte[] buf = new byte[bufferSize];
                 try
                 {
@@ -302,7 +303,8 @@ namespace CPM
                             bufPtr++;
                             break;
                         default:
-                            MessageBox.Show("IMD sector marker out of scope", "Error",
+                            MessageBox.Show("IMD sector marker out of scope "+buf[bufPtr].ToString("X2")
+                                +" at location "+ bufPtr.ToString("X8"), "Error",
                                 MessageBoxButtons.OK);
                             DiskImageImdActive = "";        // disk read failed, mark disk image inactive
                             return result;
@@ -316,7 +318,10 @@ namespace CPM
                 if (sectorCnt == 18*160)
                     diskType = 0xff;
                 else 
-                    diskType = (int) buf[diskMap[0] + 6];
+                    if (fileLen < 104000)
+                        diskType = DiskType[DiskType.GetLength(0) - 2, 0];
+                    else
+                        diskType = (int) buf[diskMap[0] + 6];
 
 
                 for (ctr = 0; ctr < DiskType.GetLength(0); ctr++) // search DiskType array for values
@@ -334,6 +339,7 @@ namespace CPM
                         dirSectStart = dirStart / sectorSize;
                         break;
                     }
+
 
                 // error if no match found
                 if (ctr == DiskType.GetLength(0))
@@ -1068,6 +1074,8 @@ namespace CPM
             if (filelen < 102500) // Smallest H37 formats
             {
                 // check if disk type value matches. If not, most likely an H8D disk
+                if (ctr >= DiskType.GetLength(0)) 
+                    ctr = DiskType.GetLength(0)-1;        // make sure array value is in bounds
                 if (buffer[5] != DiskType[ctr, 0])
                     switch (buffer[5])
                     {                       // assign values for the last two table entries
