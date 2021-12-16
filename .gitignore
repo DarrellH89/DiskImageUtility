@@ -1,8 +1,6 @@
 .vs/
 DiskUtility/obj/*
-DiskUtility/bin/*
-!/DiskUtility/bin/Release/*.cfg
-!/DiskUtility/bin/Release/*.img
-!/DiskUtility/bin/Release/*.exe
-!/DiskUtility/bin/Release/*.zip
+DiskUtility/bin/debug/*
+DiskUtility/bin/release/*.pdb
+
 
