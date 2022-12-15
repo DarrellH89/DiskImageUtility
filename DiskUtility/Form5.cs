@@ -158,7 +158,8 @@ namespace DiskUtility
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
             string path = "";
-            foreach (var lb in listBox1.SelectedItems)
+            //foreach(var lb in listBox1.SelectedItems)
+            var lb = listBox1.SelectedItem;
             {
                 path = tbFolder.Text + "\\" + lb.ToString();
                 if (path.Contains(".DOS.IMG"))
@@ -166,6 +167,7 @@ namespace DiskUtility
                 else
                     fileCreate(0, path);
             }
+        //    buttonFolder_Init(start);
         }
 
         /******************** File Create File for CP/M *******************************/
@@ -255,7 +257,6 @@ namespace DiskUtility
                 fileOutByte.Write(cpmBuf, 0, diskTotalBytes);
                 fileOutByte.Close();
                 fso.Dispose();
-
                 }
 
   
@@ -292,7 +293,8 @@ namespace DiskUtility
                 fileOutBytes.Close();
                 fsOut.Dispose();
                 }
-            }
+            //buttonFolder_Init(start);
+        }
         /******************** File Create File for MS-DOS *******************************/
         /* Input disk type - first value in file type data array
 
@@ -419,6 +421,7 @@ namespace DiskUtility
                 fileOutBytes.Close();
                 fsOut.Dispose();
             }
+        //    buttonFolder_Init(start);
         }
 
 

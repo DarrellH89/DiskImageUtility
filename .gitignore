@@ -1,6 +1,6 @@
 .vs/
 DiskUtility/obj/*
 DiskUtility/bin/debug/*
-DiskUtility/bin/release/*.pdb
-
+DiskUtility/bin/release/*.exe
+DiskImageUtility.sln.DotSettings.user
 

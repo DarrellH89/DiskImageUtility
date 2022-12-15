@@ -804,7 +804,17 @@ namespace CPM
           
             ctr = DiskTypeCheck(ref buf, fileLen, diskFileName.ToUpper().EndsWith("IMG"));
             // if (diskType == DiskType[ctr, 0] || ctr == DiskType.GetLength(0) - 1)
-            if(ctr != DiskType.GetLength(0))
+            // H8D LLL disk check
+            bool H8dLLL = false;
+            if (ctr == DiskType.GetLength(0))
+            {
+                if (diskFileName.EndsWith(".H8D") && (fileLen == 204800 || fileLen == 409600))
+                {   // Treat as LLL disk
+                    ctr = DiskType.GetLength(0) - 1;
+                    H8dLLL = true;
+                }
+            }
+            if (ctr != DiskType.GetLength(0))
             {
                 // if ctr equals last value, use as default
                 diskType = DiskType[ctr, 0];        // disk type marker
@@ -834,11 +844,20 @@ namespace CPM
                 MessageBox.Show("Could not determine CP/M Disk type", "Error", MessageBoxButtons.OK);
                 return;
             }
-            if (ctr == DiskType.GetLength(0) - 1 && fileLen > 120 * 1024) // using default, check file size
+            if (H8dLLL) // using default, check file size
             {
-                albSize = 0x800;
-                dirSize = albSize * 2; // larger directory for 400k H17 disks
-                diskSize = 160 * spt * sectorSize / 1024;
+                if (fileLen == 204800)
+                {
+                    albSize = 0x800;
+                    dirSize = albSize * 2; // larger directory for 400k H17 disks
+                    diskSize = 204800; //160 * spt * sectorSize / 1024;
+                }
+                if (fileLen == 409600)
+                {
+                    albSize = 0x800;
+                    dirSize = albSize * 2; // larger directory for 400k H17 disks
+                    diskSize = 409600; // 160 * spt * sectorSize / 1024;
+                }
             }
 
             // error if no match found
@@ -1011,7 +1030,8 @@ namespace CPM
                 {
                     var rBptr = 0; // read buffer ptr
                     var wBptr = 0; // write buffer ptr
-                    var wBuff = new byte[obj.fsize + 256]; //   write buffer
+                    var buffSize = obj.fsize;
+                    var wBuff = new byte[buffSize]; //   write buffer + 256 removed
 
                     foreach (var f in obj.fcbList)
                     {
@@ -1038,8 +1058,22 @@ namespace CPM
                                     fcbNum -= j;
                                 }
                     }
-
-                    return wBuff;
+                    // look for 0x1A to indicate end of text file
+                    var chk = 0;
+                    for (; chk < buffSize; chk++)
+                    {
+                        if (wBuff[chk] == 0x1a)
+                            break;
+                    }
+                    if(chk == buffSize)
+                        return wBuff;
+                    else
+                    {
+                        var wBuff1 = new byte[chk];
+                        for (var i = 0; i < chk; i++)
+                            wBuff1[i] = wBuff[i];
+                        return wBuff1;
+                    }
                 }
 
             }

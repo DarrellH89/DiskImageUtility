@@ -74,7 +74,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.1d Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.1f Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -234,6 +234,7 @@ namespace DiskUtility
             makeDisk.ShowDialog();
             makeDisk.unload();
             Refresh();
+            BtnFolder_initA();
         }
         //********************* Add MS-DOS Blank Disk image ***********************
         private void buttonCreateMSDOS_click(object sender, EventArgs e)
@@ -242,6 +243,7 @@ namespace DiskUtility
             makeDisk.ShowDialog();
             makeDisk.unload( );
             Refresh();
+            BtnFolder_initA();
         }
 
         //*************** File List ********************
@@ -345,7 +347,7 @@ namespace DiskUtility
                                                                  || lb.ToString().ToUpper().EndsWith(".IMG"))
                                                           //       || lb.ToString().ToUpper().EndsWith(".H8D")) // no need, HxCFloppy works with H8D
                     {
-                        var fileType = lb.ToString().ToUpper().EndsWith(".IMD"); // test for IMD file
+                        var IMDfileType = lb.ToString().ToUpper().EndsWith(".IMD"); // test for IMD file
                         // read entire file into memory
                         var diskFileName = labelFolder.Text + "\\" + lb.ToString();
                         var file = File.OpenRead(diskFileName); // read entire file into an array of byte
@@ -370,7 +372,7 @@ namespace DiskUtility
 
                         // create output file
                         int wBufPtr = 0, bufPtr = 0, firstSector = 0;
-                        if (fileType) // convert IMD to IMG for H89, Z100, or Small Z80
+                        if (IMDfileType) // convert IMD to IMG for H89, Z100, or Small Z80
                         {
                             diskFileName = diskFileName.Replace(".IMD", ".IMG");
                             if (diskFileName.Contains(".H37"))
@@ -406,7 +408,7 @@ namespace DiskUtility
 
                         var bin_out = new BinaryWriter(file_out);
 
-                        if (fileType) // convert to H37, Z80, Z100
+                        if (IMDfileType) // convert to H37, Z80, Z100
                         {
                             while (buf[bufPtr] != 0x1a && bufPtr < fileLen)
                                 bufPtr++; // look for end of text comment in IMD file
@@ -619,6 +621,7 @@ namespace DiskUtility
                 if (result == 1) 
                     resultStr = resultStr.Replace("ks", "k");
                 MessageBox.Show(resultStr, "Disk Conversion", MessageBoxButtons.OK);
+                BtnFolder_initA();
         }
 
         //******************************* Process File IMD ********************************
@@ -954,7 +957,7 @@ namespace DiskUtility
             if (files_extracted > 0)
             {
                 var message = string.Format("{0} file(s) extracted", files_extracted);
-                MessageBox.Show(this, message, "DiskUtility");
+                MessageBox.Show(this, message, "Disk Image Utility");
             }
         }
 
@@ -1026,6 +1029,7 @@ namespace DiskUtility
                         var binOut = new BinaryWriter(fileOut);
                         if (hdosFile) // convert H8D to IMG
                         {
+                            // byte for byte copy, no interleave adjustment
                             for (var i = 0; i < fileLen; i++)
                                 wbuf[wBufPtr++] = buf[rBufPtr++];
                         }
@@ -1073,8 +1077,14 @@ namespace DiskUtility
 
                 var fileStr = totalConvert.ToString() + " Files Converted";
                 MessageBox.Show(fileStr, "H8D Conversions", MessageBoxButtons.OK);
+                BtnFolder_initA();
             }
         }
+
+        /************************ Is HDOS Disk ***************************************/
+        // input: disk image buffer
+        // output: true if HDOS disk
+        //
     static public bool IsHDOSDisk(ref byte[] track_buffer)
         {
             if ((track_buffer[0] == 0xAF && track_buffer[1] == 0xD3 && track_buffer[2] == 0x7D && track_buffer[3] == 0xCD) ||   //  V1.x
