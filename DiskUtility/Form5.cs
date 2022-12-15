@@ -167,7 +167,7 @@ namespace DiskUtility
                 else
                     fileCreate(0, path);
             }
-        //    buttonFolder_Init(start);
+            buttonFolder_Init(start);
         }
 
         /******************** File Create File for CP/M *******************************/
@@ -293,7 +293,7 @@ namespace DiskUtility
                 fileOutBytes.Close();
                 fsOut.Dispose();
                 }
-            //buttonFolder_Init(start);
+            buttonFolder_Init(start);
         }
         /******************** File Create File for MS-DOS *******************************/
         /* Input disk type - first value in file type data array
@@ -421,7 +421,7 @@ namespace DiskUtility
                 fileOutBytes.Close();
                 fsOut.Dispose();
             }
-        //    buttonFolder_Init(start);
+            buttonFolder_Init(start);
         }
 
 
