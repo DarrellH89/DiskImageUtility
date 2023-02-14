@@ -64,7 +64,7 @@ namespace DiskUtility
                     string[] img_list = (string[])Directory.GetFiles(tbFolder.Text, "*.DOS.img"); //.Where(name => !name.EndsWith(".DOS.IMG"));
                     file_list = new string[img_list.Length];
                     Array.Copy(img_list,file_list, img_list.Length);
-                    Form5.ActiveForm.Text = "Add Files to a DOS Image";
+                    Form5.ActiveForm.Name = "Add Files to a DOS Image";
                 }
                 catch
                 {

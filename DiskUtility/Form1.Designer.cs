@@ -218,7 +218,7 @@ namespace DiskUtility
             this.labelFolder.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelFolder.Location = new System.Drawing.Point(121, 28);
             this.labelFolder.Name = "labelFolder";
-            this.labelFolder.Size = new System.Drawing.Size(77, 16);
+            this.labelFolder.Size = new System.Drawing.Size(76, 16);
             this.labelFolder.TabIndex = 20;
             this.labelFolder.Text = "labelFolder";
             // 

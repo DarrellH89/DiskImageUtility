@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
@@ -46,17 +48,17 @@ namespace DiskUtility
 
         public ArrayList DiskFileList;
 
-       /*
-        public struct DiskLabelEntry
-        {
-            public int ListBox2Entry;
-            public string DiskImageName;
-            public string DiskLabelName;
-        }
+        /*
+         public struct DiskLabelEntry
+         {
+             public int ListBox2Entry;
+             public string DiskImageName;
+             public string DiskLabelName;
+         }
 
-        public ArrayList DiskLabelList;
-        public DiskLabelEntry RelabelEntry;
-       */
+         public ArrayList DiskLabelList;
+         public DiskLabelEntry RelabelEntry;
+        */
 
         public bool bImageList = false;
 
@@ -74,7 +76,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.1f Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.1g Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -328,12 +330,48 @@ namespace DiskUtility
                 TotalSize / 1024));
             listBoxFiles.Items.Add("");
         }
+        //************************** TrackData *************************
+        // stores track data
+        private byte[] TrackData(byte[] b, int ptr)
+        {
+            var tb = new byte[50];
+            int p = ptr, tbptr, temp, power=0;
 
+            tb[1] = b[p++];           // mode
+            tb[2] = b[p++];           // cylinder
+            tb[3] = b[p++] ;   // head flags, bits 6 & 7
+            tb[4] = b[p++];           // SPT
+            tb[5] = b[p++];
+            //var t1 = b[p];
+            //var t2 = Math.Pow(2, t1);
+            //var t3 = (byte)(Math.Pow(2, b[p++]) * 128);
+            //tb[5] = (byte) (Math.Pow(2, b[p++])*128);   // Sector size flag
+            tbptr = 6;
+            temp = p + tb[4];
+            for (; p < temp; p++)  // sector map
+                tb[tbptr++] = b[p];
+            temp = p + tb[4];
+            if ((tb[3]& 0x80) > 0)                  // Cylinder map
+                for (; p < temp; p++)  // sector map
+                    tb[tbptr++] = b[p];
+            tb[0] = (byte) tbptr;      // number of valid bytes
+            return tb;
+        }
 
         //************************** Convert IMD  to IMG or IMG/H37 to IMD ******************************************
         private void BtnImdConvert_click(object sender, EventArgs e)
         {
             var sectorSizeList = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192 }; // IMD values
+  
+            List<byte[]> trackList = new List<byte[]>() ;
+            int trackChange = 0;
+            int dataReadError = 0;
+            int cylHeadCnt = 0;
+            byte[] tb0 = new byte[50] ;
+            byte[] tb1 = new byte[50];
+            bool abort = false;
+            int trackStart;
+            int[] diskSkew = new int[25];           // larger than any known SPT
             int result = 0;
             int H8DCount = 0;
             // int diskType = 0;
@@ -349,6 +387,7 @@ namespace DiskUtility
                     {
                         var IMDfileType = lb.ToString().ToUpper().EndsWith(".IMD"); // test for IMD file
                         // read entire file into memory
+                        var shortFileName = lb.ToString();
                         var diskFileName = labelFolder.Text + "\\" + lb.ToString();
                         var file = File.OpenRead(diskFileName); // read entire file into an array of byte
                         var fileByte = new BinaryReader(file);
@@ -359,11 +398,11 @@ namespace DiskUtility
                         try
                         {
                             if (fileByte.Read(buf, 0, fileLen) != fileLen)
-                                MessageBox.Show("File Read Error", "Error", MessageBoxButtons.OK);
+                                MessageBox.Show(shortFileName+" File Read Error", "Error", MessageBoxButtons.OK);
                         }
                         catch
                         {
-                            MessageBox.Show("File Access Error", "Error", MessageBoxButtons.OK);
+                            MessageBox.Show(shortFileName + " File Access Error", "Error", MessageBoxButtons.OK);
                             return;
                         }
 
@@ -391,7 +430,7 @@ namespace DiskUtility
 
 
                         if (File.Exists(diskFileName))
-                            if (MessageBox.Show("File exists, Overwrite it?", "File Exists",
+                            if (MessageBox.Show(shortFileName+" exists, Overwrite it?", "File Exists",
                                     MessageBoxButtons.YesNo) ==
                                 DialogResult.No)
                                 return;
@@ -402,7 +441,7 @@ namespace DiskUtility
                         }
                         catch
                         {
-                            MessageBox.Show("File Access Error", "Error", MessageBoxButtons.OK);
+                            MessageBox.Show(shortFileName+" File Access Error", "Error", MessageBoxButtons.OK);
                             return;
                         }
 
@@ -415,25 +454,36 @@ namespace DiskUtility
                             if (bufPtr < fileLen && buf[bufPtr + 1] < 6
                             ) // process as IMD file - found end of comment and next byte is valid
                             {
-                                bufPtr += 4; // skip cylinder count, head value used for extra data flag
+                                tb0 = TrackData( buf,++bufPtr );
+                                trackList.Add(tb0);         // Save initial track information
+                                trackStart = bufPtr;
+                                bufPtr += 3; // skip cylinder count, head value used for extra data flag
                                 var spt = buf[bufPtr++]; // sectors per track
                                 var sectorSize = sectorSizeList[buf[bufPtr++]];
-                                var diskSkew = new int[spt];
+                                //diskSkew = new int[spt];
                                 for (var i = 0; i < spt; i++) diskSkew[i] = buf[bufPtr++]; // load skew table
                                 //int shift = 0, temp = 0;
-
+                                if((trackStart + tb0[0]-1)!= bufPtr)
+                                    Debug.WriteLine("Initial Track Header Miscount. Calc {0:X} Actual {1:X}",
+                                            trackStart + tb0[0], bufPtr);
+                                if (tb0[3] > 1) // Found cylinder map, advance past it
+                                {
+                                    bufPtr += spt;
+                                    cylHeadCnt++;
+                                }
 
                                 firstSector = bufPtr;
                                 //var numTrack = 0;
 
                                 int sectorCnt = 0, totalSect = 0;
 
-                                while (bufPtr < fileLen)
+                                while (bufPtr < fileLen && !abort)
                                 {
 
                                     totalSect++;
                                     var t0 = (sectorCnt) % spt;
-                                    var t1 = buf[bufPtr];
+                                    var modeVal = buf[bufPtr];
+                                    Debug.WriteLine("Sector offset {0:X} Value {1:X}", bufPtr, buf[bufPtr]);
                                     switch (buf[bufPtr])
                                     {
                                         case 1:
@@ -447,6 +497,8 @@ namespace DiskUtility
                                                 wbuf[(diskSkew[sectorCnt] - 1) * sectorSize + i] = buf[bufPtr++];
                                             }
 
+                                            if (modeVal != 1)
+                                                dataReadError++;
                                             break;
                                         case 2:
                                         case 4:
@@ -456,15 +508,18 @@ namespace DiskUtility
                                             for (var i = 0; i < sectorSize; i++)
                                                 wbuf[(diskSkew[sectorCnt] - 1) * sectorSize + i] = buf[bufPtr];
                                             bufPtr++;
+                                            if (modeVal != 2)
+                                                dataReadError++;
                                             break;
                                         case 0:
                                             bufPtr++;
                                             break;
                                         default:
-                                            MessageBox.Show("IMD sector marker out of scope" + buf[bufPtr].ToString("X2") 
-                                                            + " at location " + bufPtr.ToString("X8"), "Error",
+                                            MessageBox.Show(shortFileName+" IMD sector marker out of scope " + buf[bufPtr].ToString("X2") 
+                                                            + " at location " + bufPtr.ToString("X8")+". Values in hex", "Error",
                                                             MessageBoxButtons.OK);
-                                            bufPtr = fileLen; // stop processing due to file error
+                                            Debugger.Break();
+                                            abort = true; // stop processing due to file error
                                             break;
                                     }
 
@@ -473,15 +528,78 @@ namespace DiskUtility
                                     {
                                         bin_out.Write(wbuf, 0, spt * sectorSize); // write a track at a time
                                         sectorCnt = 0;
-                                        bufPtr += 5 + spt; // skip track header and interleave info
+                                        /**************
+                                        *     NEED TO ADD CODE TO CHECK SPT AND SKEW FOR EACH TRACK
+                                        */
+                                        tb1 = TrackData(buf, bufPtr);
+                                        var ok = true;
+                                        for (var i = 0; i < tb1[0]; i++)            // check if track info changed
+                                        {
+                                            if (tb0[i] != tb1[i])
+                                            {
+                                                ok = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if ((tb0[4] != tb1[4])&&(bufPtr < fileLen)) // Fatal Error, SPT changed
+                                        {
+                                            MessageBox.Show( string.Format(shortFileName+" Sector per Track changed from {0} to {1}", 
+                                                             tb0[4], tb1[4]), "Fatal Error", MessageBoxButtons.OK );
+                                            abort = true;   // flag exit
+                                        }
+
+                                        if (!ok)
+                                        {
+                                            trackList.Add(tb1);         // Save new track information
+                                            for (var i = 0; i < tb1[0]; i++)
+                                            {
+                                                tb0[i] = tb1[i];
+                                            }
+
+                                            trackChange++;
+                                        }
+                                        trackStart = bufPtr;
+                                        bufPtr += 3; // skip cylinder count, head value used for extra data flag
+                                        spt = buf[bufPtr++]; // sectors per track
+                                        if (buf[bufPtr] > sectorSizeList.Length)
+                                            Debugger.Break();
+                                        sectorSize = sectorSizeList[buf[bufPtr++]];
+                                        //diskSkew = new int[spt];
+                                        for (var i = 0; i < spt; i++) 
+                                            diskSkew[i] = buf[bufPtr++]; // load skew table
+                                        //int shift = 0, temp = 0;
+                                        var t5 = trackStart + tb1[0];
+                                        if ((trackStart + tb1[0]-1)!= bufPtr)       // Found cylinder map, advance past it
+                                        {
+                                            Debug.WriteLine("Sector Cylinder Map");
+                                            bufPtr = trackStart + tb1[0]-1;
+                                            cylHeadCnt++;
+
+                                        }
+
+                                        //bufPtr += 5 + spt; // skip track header and interleave info
+
 
                                     }
                                 }
 
-                                if (sectorCnt > 0) bin_out.Write(wbuf, 0, (sectorCnt - 1) * sectorSize);
+                                if (!abort)
+                                {
+                                    if (sectorCnt > 0) 
+                                        bin_out.Write(wbuf, 0, (sectorCnt - 1) * sectorSize);
+                                    result++;
+                                }
+
                                 bin_out.Close();
                                 file_out.Close();
-                                result++;
+                                if(abort)
+                                    File.Delete(diskFileName);
+                                // Report Results
+                                Debug.WriteLine(" Track Data Changes {0}", trackChange);
+                                Debug.WriteLine("Data Read Errors {0}", dataReadError);
+                                Debug.WriteLine("Cylinder Head Fields {0}", cylHeadCnt);
+
                             }
                         }
                         else //Convert IMG File H37, Z80, or Z100 to IMD
@@ -521,16 +639,16 @@ namespace DiskUtility
                                 skewMap = putMsdos.BuildSkew(intLv, spt);
                                 //result++;
                             }
-                            else
+                            else           //************* CP/M File format
                             {
-                               // CP/M File format
+                               
                                 var putCPM = new CPMFile();
                                 ctr = putCPM.DiskTypeCheck(ref buf, fileLen, diskFileName.ToUpper().EndsWith("IMG"));
                                 if (ctr != putCPM.DiskType.GetLength(0))
                                 {
                                     if(lb.ToString().ToUpper().Contains(".IMG"))
                                         intLv = 1; // interleave
-                                      else
+                                    else
                                         intLv = putCPM.DiskType[ctr, 5];
                                     spt = putCPM.DiskType[ctr, 6]; // sectors per track  
                                     sectorSize = putCPM.DiskType[ctr, 7]; // sector size
@@ -607,10 +725,8 @@ namespace DiskUtility
                             file_out.Dispose();
                             result++;
                         }
-
                     }
-
-
+                    abort = false;  // reset for multiple files
                 } 
                 var resultStr = string.Format("{0} Disks converted.", result);
                 if (H8DCount > 0)
@@ -1084,7 +1200,7 @@ namespace DiskUtility
         /************************ Is HDOS Disk ***************************************/
         // input: disk image buffer
         // output: true if HDOS disk
-        //
+        // code from Les Bird H8DUtility
     static public bool IsHDOSDisk(ref byte[] track_buffer)
         {
             if ((track_buffer[0] == 0xAF && track_buffer[1] == 0xD3 && track_buffer[2] == 0x7D && track_buffer[3] == 0xCD) ||   //  V1.x
