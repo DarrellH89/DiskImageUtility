@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CPM\HDOS.cs" />
     <Compile Include="CPM\MSDOS.cs" />
     <Compile Include="CPM\CPMFile.cs" />
     <Compile Include="Form1.cs">

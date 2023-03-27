@@ -48,6 +48,7 @@ namespace DiskUtility
             this.labelVersion = new System.Windows.Forms.Label();
             this.labelFolder = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.BtnAddHdos = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -138,7 +139,7 @@ namespace DiskUtility
             // 
             // BtnAddMsdos
             // 
-            this.BtnAddMsdos.Location = new System.Drawing.Point(595, 567);
+            this.BtnAddMsdos.Location = new System.Drawing.Point(595, 595);
             this.BtnAddMsdos.Name = "BtnAddMsdos";
             this.BtnAddMsdos.Size = new System.Drawing.Size(85, 22);
             this.BtnAddMsdos.TabIndex = 7;
@@ -232,11 +233,22 @@ namespace DiskUtility
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.BtnH8dConvert_Click);
             // 
+            // BtnAddHdos
+            // 
+            this.BtnAddHdos.Location = new System.Drawing.Point(595, 567);
+            this.BtnAddHdos.Name = "BtnAddHdos";
+            this.BtnAddHdos.Size = new System.Drawing.Size(85, 22);
+            this.BtnAddHdos.TabIndex = 8;
+            this.BtnAddHdos.Text = "Add HDOS";
+            this.BtnAddHdos.UseVisualStyleBackColor = true;
+            this.BtnAddHdos.Click += new System.EventHandler(this.buttonCreateHdos_click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(972, 712);
+            this.Controls.Add(this.BtnAddHdos);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.labelFolder);
             this.Controls.Add(this.labelVersion);
@@ -285,6 +297,7 @@ namespace DiskUtility
         private System.Windows.Forms.Label labelVersion;
         private System.Windows.Forms.Label labelFolder;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button BtnAddHdos;
     }
 }
 

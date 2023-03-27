@@ -40,7 +40,7 @@ namespace DiskUtility
             listBox1.Items.Clear(); // clear file list
             // set file extension types to scan directory
             string[] file_list = new string[1];
-            if(fileStart == 'C')                    // CP/M
+            if(fileStart == 'C' || fileStart == 'H')                    // CP/M
                 try
                 {
                     string[] h8d_list = Directory.GetFiles(tbFolder.Text, "*.h8d");
@@ -50,7 +50,12 @@ namespace DiskUtility
                     Array.Copy(h8d_list, file_list, h8d_list.Length);
                     Array.Copy(h37_list, 0, file_list, h8d_list.Length, h37_list.Length);
                     Array.Copy(img_list, 0, file_list, h8d_list.Length+h37_list.Length, img_list.Length);
-                    Form5.ActiveForm.Name = "Add Files to a CP/M Image";
+                    if(fileStart == 'C')
+                        Form5.ActiveForm.Name = "Add Files to a CP/M Image";
+                    else
+                    {
+                        Form5.ActiveForm.Name = "Add Files to a HDOS Image";
+                    }
                 }
                 catch
                 {
@@ -154,7 +159,10 @@ namespace DiskUtility
         {
             fileCreateDos(0xf0, "");
         }
-
+        private void ButtonH37HDOS_4063_Click(object sender, EventArgs e)
+        {
+            fileCreate(6, "");
+        }
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
             string path = "";

@@ -68,8 +68,8 @@ namespace CPM
          0001 =         DPE2S	EQU	00000001B
 
         */
-        // 0.Disk type, 1.Allocation block size, 2.Directory start, 3.Allocation block byte size, 4.dir size, 5.interleave, 6.Sectors per Track, 7.Sector Size,
-        // 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
+        // 0.Disk type, 1.Allocation block size, 2.Directory start, 3.Allocation block byte size, 4.dir size, 5.interleave,
+        // 6.Sectors per Track, 7.Sector Size, 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
         public int[,] DiskType =
         {
             // 0    1       2     3     4    5  6   7       8  9

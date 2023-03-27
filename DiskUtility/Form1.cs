@@ -14,6 +14,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using HDOS;
 
 namespace DiskUtility
 {
@@ -26,7 +27,7 @@ namespace DiskUtility
         /*
         public struct CPMDirEntry
         {
-            public byte flag;
+            public byte flag; 
             public byte[] filename;
             public byte[] fileext;
             public byte extent;
@@ -76,7 +77,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.1g Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.2 Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -225,12 +226,23 @@ namespace DiskUtility
         private void BtnListboxfilesCopy_Click(object sender, EventArgs e)
         {
             string s1 = "";
-            foreach (object item in listBoxFiles.Items) s1 += item.ToString() + "\r\n";
+            foreach (object item in listBoxFiles.Items) 
+                s1 += item.ToString() + "\r\n";
             Clipboard.SetText(s1);
         }
 
+        //********************* Add HDOS Blank Disk image ***********************
+        private void buttonCreateHdos_click(object sender, EventArgs e)
+        {
+            var makeDisk = new Form5('H');
+            makeDisk.ShowDialog();
+            makeDisk.unload();
+            Refresh();
+            BtnFolder_initA();
+        }
+
         //********************* Add CP/M Blank Disk image ***********************
-        private void buttonCreateCPM_click(object sender, EventArgs e)
+            private void buttonCreateCPM_click(object sender, EventArgs e)
         {
             var makeDisk = new Form5('C');
             makeDisk.ShowDialog();
@@ -278,7 +290,7 @@ namespace DiskUtility
                     else 
                     */
                     if (IsHDOSDisk(ref tempBuf))
-                        listBoxFiles.Items.Add("    HDOS Disk");
+                        ProcessFileHdos(disk_name);    // process HDOS files
                     else if (lb.ToString().Contains(".DOS")) 
                         ProcessFileDOS(disk_name);  // check for Z100 MS-DOS first
                     else if (lb.ToString().Contains(".IMD"))
@@ -302,7 +314,7 @@ namespace DiskUtility
 
                     listBoxFiles.Items.Add(lb.ToString());
                     if (IsHDOSDisk(ref tempBuf))
-                        listBoxFiles.Items.Add("    HDOS Disk");
+                        ProcessFileHdos(disk_name);    // process HDOS files
                     else if (lb.ToString().Contains(".DOS."))
                         ProcessFileDOS(disk_name); // check for Z100 MS-DOS first
                     else if (lb.ToString().Contains(".IMD"))
@@ -331,7 +343,7 @@ namespace DiskUtility
             listBoxFiles.Items.Add("");
         }
         //************************** TrackData *************************
-        // stores track data
+        // stores IMD track data
         private byte[] TrackData(byte[] b, int ptr)
         {
             var tb = new byte[50];
@@ -843,6 +855,58 @@ namespace DiskUtility
             FileCount += diskFileCnt;
 
         }
+        //******************************* Process File HDOS ********************************
+
+        private void ProcessFileHdos(string diskName) // for .H37 & H8D disks
+        {
+            var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
+            var encoding = new UTF8Encoding();
+            int diskUsed = 0, diskTotal = 0;
+
+            getHdosFile.ReadHdosDir(diskName, ref diskTotal);
+            var diskFileCnt = 0;
+
+            if (getHdosFile.fileNameList.Count > 0)
+            {
+                diskFileCnt = 0;
+                diskUsed = 0;
+                listBoxFiles.Items.Add("HDOS DISK IMAGE");
+                listBoxFiles.Items.Add(getHdosFile.diskLabel);
+                listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
+                listBoxFiles.Items.Add("Usr   FILE   EXT SIZE Date  FLAGS  ");
+                listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
+                foreach (var f in getHdosFile.fileNameList)
+                {
+                    diskFileCnt++;
+                    diskUsed += f.fCluster;
+                    var disk_file_entry = new DiskFileEntry();
+                    disk_file_entry.DiskImageName = diskName;
+                    disk_file_entry.FileName = f.fname;
+                    disk_file_entry.UserArea = f.userArea;
+                    disk_file_entry.ListBox2Entry = listBoxFiles.Items.Count;
+                    disk_file_entry.fFlags = f.flags;
+                    disk_file_entry.fDate = f.createDate;
+                    DiskFileList.Add(disk_file_entry);
+                    int tt = 0;
+                    var tempStr = disk_file_entry.FileName.Substring(0, 11);
+                    tempStr = tempStr.Insert(8, " ");
+                    int tempSize = f.fsize ;
+                    var tempDate = f.createDate ;
+
+                    listBoxFiles.Items.Add(string.Format("{0,4:G} {1,12:G} {2,4:G} {3,9:G} {4}",
+                        f.userArea, tempStr, tempSize, f.createDate, f.flags));
+                }
+            }
+
+            listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
+            listBoxFiles.Items.Add(string.Format("Files {0}, Total {1,4:G}, Free {2,5:G}, Disk Size {3,5:G}",
+                diskFileCnt, diskUsed , (diskTotal - diskUsed) , diskTotal ));
+            listBoxFiles.Items.Add("");
+            TotalSize += (int)diskUsed*256;
+            FileCount += diskFileCnt;
+
+        }
+
         //******************************* Process File MS-DOS Files for Z-100 ********************************
 
         private void ProcessFileDOS(string diskName) // for Z100 MS-DOS disks
@@ -1212,6 +1276,8 @@ namespace DiskUtility
             }
             return (false);
         }
+
+
     }
 
 }
