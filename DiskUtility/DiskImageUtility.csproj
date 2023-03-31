@@ -59,9 +59,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CPM\HDOS.cs" />
-    <Compile Include="CPM\MSDOS.cs" />
-    <Compile Include="CPM\CPMFile.cs" />
+    <Compile Include="OSTypes\HDOS.cs" />
+    <Compile Include="OSTypes\MSDOS.cs" />
+    <Compile Include="OSTypes\CPMFile.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

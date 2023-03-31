@@ -2,7 +2,9 @@
 using CPM;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using HDOS;
 using MSDOS;
 
 
@@ -51,10 +53,10 @@ namespace DiskUtility
                     Array.Copy(h37_list, 0, file_list, h8d_list.Length, h37_list.Length);
                     Array.Copy(img_list, 0, file_list, h8d_list.Length+h37_list.Length, img_list.Length);
                     if(fileStart == 'C')
-                        Form5.ActiveForm.Name = "Add Files to a CP/M Image";
+                        this.Text = "Add Files to a CP/M Image";
                     else
                     {
-                        Form5.ActiveForm.Name = "Add Files to a HDOS Image";
+                        this.Text = "Add Files to a HDOS Image";
                     }
                 }
                 catch
@@ -69,7 +71,7 @@ namespace DiskUtility
                     string[] img_list = (string[])Directory.GetFiles(tbFolder.Text, "*.DOS.img"); //.Where(name => !name.EndsWith(".DOS.IMG"));
                     file_list = new string[img_list.Length];
                     Array.Copy(img_list,file_list, img_list.Length);
-                    Form5.ActiveForm.Name = "Add Files to a DOS Image";
+                    this.Text = "Add Files to a DOS Image";
                 }
                 catch
                 {
@@ -159,9 +161,17 @@ namespace DiskUtility
         {
             fileCreateDos(0xf0, "");
         }
-        private void ButtonH37HDOS_4063_Click(object sender, EventArgs e)
+        private void ButtonHDOS_100_Click(object sender, EventArgs e)
         {
-            fileCreate(6, "");
+            fileCreateHdos(1, "");
+        }
+        private void ButtonHDOS_320_Click(object sender, EventArgs e)
+        {
+            fileCreateHdos(2, "");
+        }
+        private void ButtonHDOS_640_Click(object sender, EventArgs e)
+        {
+            fileCreateHdos(3, "");
         }
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
@@ -173,16 +183,83 @@ namespace DiskUtility
                 if (path.Contains(".DOS.IMG"))
                     fileCreateDos(0, path);
                 else
-                    fileCreate(0, path);
+                {
+
+                    // HDOS Check
+                    byte[] tempBuf = new byte[512];
+                    var file = File.OpenRead(path); // read entire file into an array of byte
+                    var fileByte = new BinaryReader(file);
+                    fileByte.Read(tempBuf, 0, 256);
+                    file.Close();
+                    file.Dispose();
+                    if(Form1.IsHDOSDisk(ref tempBuf))
+                        fileCreateHdos(0,path);
+                    else
+                        fileCreate(0, path);
+                }
             }
             buttonFolder_Init(start);
         }
+        /******************** File Create File for HDOS *******************************/
+        /* Input disk type - really the index to the to the HDOS file type 
+        // Disk Types
+        // 0 - Open existing file
+        // 1 - 100k, 40T, 1 side,10 SPT, 256 byte sector, 2 sectors per Group, 400 sectors
+        // 2 - 400k, 80T, 1 side, 16 SPT, 256 byte sector, 6 sectors per Group, 1278 sector
+        // 3 - 640k, 80T, 2 sides, 16 SPT, 256 byte sector, 10 sectors per Group, 2550 sector
+         */
+        private void fileCreateHdos(int diskType, string fileName)
+        {
+            var getHdos = new HDOSFile();
+            string path = fileName;
+
+            OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+
+            if (path.Length == 0) // Create disk image if no path provided
+            {
+                openFileDialog1.InitialDirectory = tbFolder.Text;
+                openFileDialog1.Filter = "HDOS Files (*.IMG)|*.IMG";
+                openFileDialog1.FilterIndex = 2;
+                openFileDialog1.RestoreDirectory = true;
+                openFileDialog1.CheckFileExists = false;
+                openFileDialog1.ShowDialog();
+                path = openFileDialog1.FileName;
+            }
+
+            if (path.Length == 0) // no file selected, nothing to do
+                return;
+            var result = File.Exists(path);    // test path provided or selected
+            //Console.WriteLine("Result: {0:G}", result);
+            if (!result) // create blank file image
+            {
+                int diskTotalBytes = 0;
+                switch (diskType)
+                {
+                    case 1:
+                        diskTotalBytes = 102400;
+                        break;
+                    case 2:
+                        diskTotalBytes = 327680;
+                        break;
+                    case 3:
+                        diskTotalBytes = 655360;
+                        break;
+                    default:
+                        break;
+                }
+
+                if (!getHdos.InitHdosDisk(diskTotalBytes, path))
+                    MessageBox.Show("HDOS File Creation Error", "HDOS Create", MessageBoxButtons.OK);
+
+
+            }
+        }
 
         /******************** File Create File for CP/M *******************************/
-        /* Input disk type - really the index to the to the CP/M file type data array
+            /* Input disk type - really the index to the to the CP/M file type data array
 
-         */
-        private void fileCreate(int diskType, string fileName)
+             */
+            private void fileCreate(int diskType, string fileName)
             {
             var getCpm = new CPMFile(); // create instance of CPMFile, then call function
             // bool fileNew = false;

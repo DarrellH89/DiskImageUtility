@@ -94,7 +94,7 @@
             this.btnH37_800.Name = "btnH37_800";
             this.btnH37_800.Size = new System.Drawing.Size(130, 23);
             this.btnH37_800.TabIndex = 5;
-            this.btnH37_800.Text = "H37 80 trk DS ED 800k";
+            this.btnH37_800.Text = "H37 80 trk 800k DS ED";
             this.btnH37_800.UseVisualStyleBackColor = true;
             this.btnH37_800.Click += new System.EventHandler(this.Buttonh37_806f_Click);
             // 
@@ -104,7 +104,7 @@
             this.btnH37_640.Name = "btnH37_640";
             this.btnH37_640.Size = new System.Drawing.Size(130, 23);
             this.btnH37_640.TabIndex = 6;
-            this.btnH37_640.Text = "H37 80 trk DS DD 640k";
+            this.btnH37_640.Text = "H37 80 trk 640k DS DD";
             this.btnH37_640.UseVisualStyleBackColor = true;
             this.btnH37_640.Click += new System.EventHandler(this.ButtonH37_806b_Click);
             // 
@@ -210,30 +210,33 @@
             // 
             // btnH80_640
             // 
-            this.btnH80_640.Location = new System.Drawing.Point(595, 204);
+            this.btnH80_640.Location = new System.Drawing.Point(588, 204);
             this.btnH80_640.Name = "btnH80_640";
-            this.btnH80_640.Size = new System.Drawing.Size(130, 23);
+            this.btnH80_640.Size = new System.Drawing.Size(149, 23);
             this.btnH80_640.TabIndex = 18;
-            this.btnH80_640.Text = "H37 80 trk DS DD 640k";
+            this.btnH80_640.Text = "HDOS 80 trk 640k  DS DD";
             this.btnH80_640.UseVisualStyleBackColor = true;
+            this.btnH80_640.Click += new System.EventHandler(this.ButtonHDOS_640_Click);
             // 
             // btnH40_400
             // 
-            this.btnH40_400.Location = new System.Drawing.Point(595, 233);
+            this.btnH40_400.Location = new System.Drawing.Point(588, 233);
             this.btnH40_400.Name = "btnH40_400";
-            this.btnH40_400.Size = new System.Drawing.Size(130, 21);
+            this.btnH40_400.Size = new System.Drawing.Size(149, 21);
             this.btnH40_400.TabIndex = 19;
-            this.btnH40_400.Text = "H37 40 trk 400k";
+            this.btnH40_400.Text = "HDOS 40 trk 320k DS DD";
             this.btnH40_400.UseVisualStyleBackColor = true;
+            this.btnH40_400.Click += new System.EventHandler(this.ButtonHDOS_320_Click);
             // 
             // btnH40_100
             // 
-            this.btnH40_100.Location = new System.Drawing.Point(595, 291);
+            this.btnH40_100.Location = new System.Drawing.Point(588, 291);
             this.btnH40_100.Name = "btnH40_100";
-            this.btnH40_100.Size = new System.Drawing.Size(130, 21);
+            this.btnH40_100.Size = new System.Drawing.Size(149, 21);
             this.btnH40_100.TabIndex = 20;
-            this.btnH40_100.Text = "HDOS H37 40 trk 100k";
+            this.btnH40_100.Text = "HDOS 40 trk 100k SS SD";
             this.btnH40_100.UseVisualStyleBackColor = true;
+            this.btnH40_100.Click += new System.EventHandler(this.ButtonHDOS_100_Click);
             // 
             // Form5
             // 
