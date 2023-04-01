@@ -872,9 +872,9 @@ namespace DiskUtility
                 diskUsed = 0;
                 listBoxFiles.Items.Add("HDOS DISK IMAGE");
                 listBoxFiles.Items.Add(getHdosFile.diskLabel);
-                listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
-                listBoxFiles.Items.Add("Usr   FILE   EXT SIZE Date  FLAGS  ");
-                listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
+                listBoxFiles.Items.Add("=== ======== === ==== ========= ===============");
+                listBoxFiles.Items.Add("Usr   FILE   EXT SIZE Date      FLAGS  ");
+                listBoxFiles.Items.Add("=== ======== === ==== ========= ===============");
                 foreach (var f in getHdosFile.fileNameList)
                 {
                     diskFileCnt++;
@@ -898,7 +898,7 @@ namespace DiskUtility
                 }
             }
 
-            listBoxFiles.Items.Add("=== ======== === ==== ========= ===========");
+            listBoxFiles.Items.Add("=== ======== === ==== ========= ===============");
             listBoxFiles.Items.Add(string.Format("Files {0}, Total {1,4:G}, Free {2,5:G}, Disk Size {3,5:G}",
                 diskFileCnt, diskUsed , (diskTotal - diskUsed) , diskTotal ));
             listBoxFiles.Items.Add("");

@@ -556,6 +556,7 @@ namespace HDOS
                     if (dirBufPtr - startGroupBufPtr == diskSectorPerGroup * 256) // get next group from GRT
                     {
                         dirGroup = buf[diskGrtStart + dirGroup];
+                                    // check if next group = 0 or next group != current dirBufPtr
                         if (dirGroup != 0 && dirGroup * diskSectorPerGroup * 256 != dirBufPtr)
                             Debug.WriteLine("dirGroup {0,4:X}!= dirBufPtr {1, 4:X}", dirGroup, dirBufPtr);
                         startGroupBufPtr = dirBufPtr;
@@ -808,7 +809,10 @@ namespace HDOS
             return fileImage;
 
         }
-
+        //***************** Init HDOS Disk ******************
+        // input: disk size total, disk file name
+        // output: create disk image in buf[] and write file to disk
+        //
         public bool InitHdosDisk(int diskTotal, string diskImageName)
         {
             var result = true;
@@ -840,7 +844,7 @@ namespace HDOS
 
             // Set up Disk info
             var diskDate = 0b110010100010110; // 10 Jun 1989
-            var flag = 0b11100010; // SLW___D_ 
+            var flag = 0b11100000; // SLW___D_  Ver2 SLWC1234; Ver 3 SLWCABDU  1234 & U are user flags
             switch (diskTotal)
             {
                 case 102400:
@@ -894,37 +898,16 @@ namespace HDOS
                 buf[bufPtr+j] = 0x20;
             buf[bufPtr+j] = 0;
 
-            // Set up GRT.SYS
-            //   disk is formatted to 'GL'
-            bufPtr = grtSector*256;
-            byte grtGroup = (byte)(grtSector / sectorsCluster ); // HDOS 3, 640k disk values: 57
-            byte directGroup = (byte)(directSector / sectorsCluster ); // 54
-            byte rgtGroup = (byte)(rgtSector / sectorsCluster); // 2
-            buf[bufPtr + grtGroup] = 0; // each file is one group
-            buf[bufPtr + directGroup] = 0;
-            buf[bufPtr + directGroup+1] = 0;                //
-            buf[bufPtr + rgtGroup] = 0;
-            buf[bufPtr] = 5;
-
-            for (j = 5; j < 256; j++)
-                if (buf[bufPtr+j+1] !=0)
-                    buf[bufPtr + j] = (byte)(j + 1);
-                else
-                {
-                    buf[bufPtr + j] = (byte)(j + 2);
-                    j++;
-                }
-
-            buf[bufPtr + 0xfe] = 0;
-            buf[bufPtr + 0x0ff] = 0xff;
 
             //RGT.SYS
             bufPtr = rgtSector*256;
             buf[bufPtr] = 0;
             buf[bufPtr + 1] = 0;
-            for (j = 2; j < diskTotal/256/sectorsCluster; j++)
+            for (j = 2; j < diskTotal/sectorsCluster/256; j++)
                 buf[bufPtr + j] = 0x01;
             buf[bufPtr + 0xff] = 0xff;
+            for (; j < 256; j++)
+                buf[bufPtr + j] = 0xff;
 
             // DIRECT.SYS
 
@@ -932,12 +915,12 @@ namespace HDOS
              
             var dirSize = sectorsCluster;
             if (diskTotal < 104000)
-                dirSize = 9;
+                dirSize = 4;
             else
                 dirSize = sectorsCluster / 2;
           
             bufPtr = directSector*256;
-            for (var k = 0; k < dirSize; k++)
+            for (var k = 0; k < dirSize; k++)       // each loop writes 512 bytes
             {
                 for( j = 0;j < dirCnt; j++)         // Write blank directory entry 
                 {
@@ -950,18 +933,47 @@ namespace HDOS
                 buf[bufPtr + l++ ] = 0;
                 buf[bufPtr + l++] = 0x17;
                 LoadBufLsMs(bufPtr+l, bufPtr/256);
-                l += 2;
-                LoadBufLsMs(bufPtr+l, (bufPtr+512)/256);
+                LoadBufLsMs(bufPtr+l+2, (bufPtr+512)/256);
                 bufPtr += 512;
             }
-
-            buf[bufPtr] = 0xff;
             LoadBufLsMs(bufPtr -2, 0);
+            //buf[bufPtr] = 0xff;
+            byte grtGroup = (byte)(grtSector / sectorsCluster); // HDOS 3, 640k disk values: 57
+            byte directGroup = (byte)(directSector / sectorsCluster); // 54
+            byte rgtGroup = (byte)(rgtSector / sectorsCluster); // 2           LoadBufLsMs(bufPtr -2, 0);
             bufPtr = directSector * 256;
-            LoadDirHdos("DIRECT  SYS", bufPtr , flag, directGroup, directGroup, sectorsCluster, diskDate);
+            LoadDirHdos("DIRECT  SYS", bufPtr , flag, directGroup, directGroup+dirSize/sectorsCluster, sectorsCluster, diskDate);
             LoadDirHdos("GRT     SYS", bufPtr += dirLen, flag, grtGroup, grtGroup, 1, diskDate);
             LoadDirHdos("RGT     SYS", bufPtr += dirLen, flag, rgtGroup, rgtGroup, 1, diskDate);
 
+            // Set up GRT.SYS
+            //   disk is formatted to 'GL'
+            bufPtr = grtSector * 256;
+            for( j = 0; j < 256; j++)
+                buf[bufPtr +j] = 1;     // fill GRT with 1's
+                // setup three required file groups
+            buf[bufPtr + grtGroup] = 0; // GRT is one sector, list of used/available clusters
+            buf[bufPtr + rgtGroup] = 0; // RGT is one sector, list of good/bad clusters
+            for(j = directGroup; j < directGroup + dirSize / sectorsCluster; j++) // DIRECT.SYS Groups
+                buf[bufPtr + j] = (byte) (j+1);
+            buf[bufPtr + j] = 0;
+
+
+                // create free list
+             var nextGroup = rgtGroup+1; 
+             buf[bufPtr] = (byte) nextGroup;
+
+            for (j = 5; j < diskSize / sectorsCluster-1; j++)
+                if (buf[bufPtr + j + 1] == 1) // available group
+                {
+                    buf[bufPtr+nextGroup] = (byte)(j + 1);
+                    nextGroup = j + 1;
+                }
+
+            buf[bufPtr + j++] = 0;         // mark end of GRT.SYS
+            buf[bufPtr + j++] = 0xff;
+            for(;j < 256;j++)
+                buf[bufPtr + j] = 0xff;
 
 
 
