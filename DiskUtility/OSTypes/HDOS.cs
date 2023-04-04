@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Windows.Forms;
+using static DiskUtility.Form1;
 
 namespace HDOS
 {
@@ -58,6 +59,7 @@ namespace HDOS
             dirCnt = 22;
 
         public string diskLabel = "";
+        public int fileLen = 0;
 
         public List<DirList> fileNameList = new List<DirList>();
 
@@ -101,7 +103,7 @@ namespace HDOS
             public string createDate;
 
             public string modDate;
-            //public List<int> grtList ;    
+            public List<int> grtList ;    
 
             public DirList()
             {
@@ -113,7 +115,20 @@ namespace HDOS
                 fGroup = lGroup = lastGroupSector = 0;
 
             }
+            public DirList(string tFname,  string tFlags, int tuser, int fgroup, int lgroup,
+                int lastgroupsector)
+            {
+                fname = tFname;
+                fsize = 0;
+                userArea = tuser;
+                flags = tFlags;
+                //grtList = new List<int> { 0 };
+                createDate = modDate = "";
+                fGroup = fgroup;
+                lGroup = lgroup;
+                lastGroupSector = lastgroupsector;
 
+            }
             public DirList(string tFname, int tFsize, string tFlags, int tuser, int fgroup, int lgroup,
                 int lastgroupsector)
             {
@@ -189,19 +204,23 @@ namespace HDOS
             long
                 diskItemp,
                 filei = 0; // file buffer index
-            //byte extentNum = 0;
-            //var dirList = new int[dirSize / 32];
-            //var dirListi = 0;
+
 
             // Read file to add to image
             var file = File.OpenRead(filename);
+            var cDate = File.GetLastWriteTime(filename);
             var len = file.Length; // read entire file into buffer
-            var filebuf = new byte[len];
+            var padLen = (len / 256)*256;
+            if (len - padLen != 0)              // make buffer a multiple of 256
+                padLen += 256;
+            var filebuf = new byte[padLen];
             var bin_file = new BinaryReader(file);
             bin_file.Read(filebuf, 0, (int)len);
             bin_file.Close();
             file.Dispose();
-
+            
+            for (var i = len; i < padLen; i++)      // pad buffer with 0
+                filebuf[i] = 0;
             // write the file to the disk image
             var filename8 = Path.GetFileNameWithoutExtension(filename);
             if (string.IsNullOrEmpty(filename8))
@@ -209,181 +228,99 @@ namespace HDOS
 
             var encoding = new ASCIIEncoding();
             filename8 = filename8.Substring(0, Math.Min(filename8.Length, 8));
-            filename8 = filename8.PadRight(8, ' ');
+            filename8 = filename8.PadRight(8, '\0');
             var ext3 = Path.GetExtension(filename);
-            ext3 = string.IsNullOrEmpty(ext3) ? ext3 = "   " : ext3 = ext3.Substring(1, Math.Min(ext3.Length - 1, 3));
-            ext3 = ext3.PadRight(3, ' ');
+            ext3 = string.IsNullOrEmpty(ext3) ? ext3 = "\0\0\0" : ext3 = ext3.Substring(1, Math.Min(ext3.Length - 1, 3));
+            ext3 = ext3.PadRight(3, '\0');
             var filenameb = string.Format(filename8 + ext3).ToUpper();
+            var fileNameStr = filenameb.Replace('\0',' ');
 
-            // Build allocation Block map and directory map
-            //var totalSectors = spt * totalTrack;
-            //var tt0 = dirStart / allocBlock;
-            //var allocationBlockMap = new int[numTrack * numHeads * spt / (albSize / sectorSize) + 1];
-            //for (var i = 0; i < allocationBlockMap.Length; i++) allocationBlockMap[i] = 0;
-            //var dirMap = new int[dirSize / 32];
-            //for (var i = 0; i < dirMap.Length; i++) dirMap[i] = 0;
-            //var dirCnt = 0;
+            var obj = fileNameList.FirstOrDefault(x => x.fname == fileNameStr);
+            if (obj != null)
+            {
+                MessageBox.Show("File Exists in image. Skipping", "File Exists", MessageBoxButtons.OK);
+                return 0;
+            }
 
-            //for (var numSect = 0; numSect < dirSize / sectorSize; numSect++) // number of sectors in directory
-            //{
-            //    diski = diskItemp =
-            //        dirStart + numSect / spt * sectorSize * spt +
-            //        skewMap[numSect % spt] * sectorSize; // buffer offset for sector start
-            //    var t0 = 0;
-            //    while (diski < diskItemp + sectorSize) // process one sector
-            //    {
-            //        // t0 = buf[diski];
-            //        if (buf[diski] < 15)            // check if user area is less than 15. greater indicates empty entry
-            //        {
-            //            var fn = filenameb.ToCharArray();   // check if file is in directory
-            //            var fcPtr = 1;
-            //            for (; fcPtr < 12; fcPtr++)
-            //                if (buf[diski + fcPtr] != (byte)fn[fcPtr - 1])
-            //                    break; // compare filename to filename in directory
-            //            if (fcPtr == 12)
-            //            {
-            //                MessageBox.Show("File already in Directory. Skipping", "File Exists", MessageBoxButtons.OK);
-            //                return 0;
-            //            }
+            // Find a Directory Entry
+            var startDir = diskDirectStart;
+            var cntDirs = 0;
+            bool found = false;
 
-            //            var cnt = Math.Ceiling((double)buf[diski + 15] * 128 / albSize); // # of allocation blocks to get in directory record
+            while (!found && startDir != 0)
+            {
+                while (cntDirs < dirCnt && !found)
+                    if (buf[startDir + cntDirs * dirLen] == 0xff)
+                    {
+                        found = true;
+                        startDir += cntDirs * dirLen;
+                    }
+                    else
+                        cntDirs++;
+                if (!found)
+                {
+                    startDir = (buf[startDir+510]+ buf[startDir + 511]*256)*256;
+                }
+            }
 
-            //            for (var i = 0; i < cnt; i++)       // build allocation block map
-            //                if (albNumSize == 1)
-            //                {
-            //                    t0 = buf[diski + 16 + i];
-            //                    allocationBlockMap[buf[diski + 16 + i]] = 1;
-            //                }
-            //                else
-            //                {
-            //                    t0 = buf[diski + 16 + i * 2] + buf[diski + 16 + i * 2 + 1] * 256;
-            //                    allocationBlockMap[buf[diski + 16 + i * 2] + buf[diski + 16 + i * 2 + 1] * 256]
-            //                        = 1;
-            //                }
-            //        }
-            //        else
-            //        {
-            //            dirMap[dirCnt] = (int)diski;
-            //            dirCnt++;
-            //        }
+            // Find available disk area
+            var grtStart = diskGrtStart ;
+            var startFree = buf[grtStart];          // start of free groups, group #
+            var nextFree = startFree;                   // next free group, group #
+            var cntFree = padLen/diskSectorPerGroup/256;   // number of groups to get
+            if (cntFree * diskSectorPerGroup * 256 != padLen)
+                cntFree++;
+            var numFree = 0;                                // Number of free groups
+            while (nextFree != 0 && numFree < cntFree-1)
+            {
+                nextFree = buf[grtStart+nextFree];
+                numFree++;
+            }
 
-            //        diski += 32;
-            //    }
-            //}
+            if (nextFree == 0)
+            {
+                MessageBox.Show("Not enough space on the disk. Skipping", "Disk Full", MessageBoxButtons.OK);
+                result = 0;
+            }
 
-            //var sectorBlock = albSize / sectorSize; // sectors per AB
-            //var trackSize = spt * sectorSize; // # bytes in a track
-            //var trackCnt = (float)trackSize / (float)albSize; // # Allocation blocks in a track
-            //if (trackCnt % 2 != 0) trackCnt = 2;
-            //else trackCnt = 1; // number of tracks for skew calculation
-            //var minBlock = trackSize * (int)trackCnt; // minimum disk size to deal with due to skewing
+            if (result == 1)              // valid directory entry and space on disk
+            {
+                var tt3 = (len % (diskSectorPerGroup * 256));
+                int lastGroupSector = (int)(padLen %(diskSectorPerGroup*256))/256;
+                if ((padLen %( diskSectorPerGroup * 256 ))%256 !=0)             // check if remainder is a multiple of 256
+                    lastGroupSector++;
+                if(lastGroupSector == 0)
+                    lastGroupSector = diskSectorPerGroup;
+                var iDate = HdosDate(cDate.Day, cDate.Month, cDate.Year);
+                var t2 = HdosDateStr(iDate);
+                LoadDirHdos(filenameb,startDir,0,startFree,nextFree,lastGroupSector,iDate);
+                // load data 
+                var grpPtr = buf[grtStart];
+                var grpPtrLast = grpPtr;
+                var imgPtr = grpPtr*diskSectorPerGroup*256;   // offset into image buffer
+                var fPtr = 0;                       // offset into insert file buffer
+                numFree = 0;                    // groups to load counter
+                int getBytes = 0;
+                while (numFree < cntFree)
+                {
+                    getBytes = diskSectorPerGroup;
+                    if (numFree == cntFree - 1)
+                    {
+                        getBytes = lastGroupSector;
+                    }
+                    for (var i = 0; i < getBytes * 256; i++)
+                        buf[imgPtr + i] = filebuf[fPtr+i];
+                    numFree++;
+                    grpPtrLast = grpPtr;
+                    grpPtr = buf[grtStart+grpPtr];
+                    imgPtr = grpPtr*diskSectorPerGroup*256;
+                    fPtr += getBytes * 256;
+                }
+                // Update GRT.SYS
+                buf[grtStart] = buf[grtStart+grpPtrLast];
+                buf[grtStart+grpPtrLast] = 0;
+            }
 
-            //// copy data to correct place in disk buffer using skew information
-            ////var basePtr = dirStart; // albNum * allocBlock + dirStart - (albNum * allocBlock) % minBlock;
-            //var dirNext = 0;
-            //var diskPtr = 0;
-            //var bytesWritten = 0;           // debug
-            //while (filei < len) // process file
-            //{
-            //    // find empty directory entry
-            //    if (dirNext < dirCnt)
-            //    {
-            //        diski = dirMap[dirNext++];
-            //    }
-            //    else
-            //    {
-            //        // not enough room on disk, erase directory entries used so far
-
-            //        result = 0;
-            //        break;
-            //    }
-
-            //    // write up to 0x80 128 byte CP/M records
-            //    dirList[dirListi++] = (int)diski; // list of disk entries to erase in case of failure
-            //    buf[diski] = 0; // mark directory entry in use
-            //    var fn = filenameb.ToCharArray();
-            //    for (var i = 1; i < 12; i++) buf[diski + i] = (byte)fn[i - 1]; // copy file name to dir entry
-            //    for (var i = 12; i < 32; i++)
-            //        buf[diski + i] = 0; // zero out extent list and remaining bytes in directory entry
-
-            //    // update extent number and records in this extent
-
-            //    var albCnt = dirSize / albSize;
-            //    var albDirCnt = 0;
-            //    var sectorCPMCnt = 0;
-
-            //    while (filei < len && albDirCnt < 16 && result > 0) // write up to 16 allocation blocks for this directory entry
-            //    // check for end of data to write, ALB < 16, for failure (result == 0)
-            //    {
-            //        // look for available allocation block
-            //        for (; albCnt < allocationBlockMap.Length; albCnt++)
-            //            if (allocationBlockMap[albCnt] == 0)
-            //            {
-            //                allocationBlockMap[albCnt] = 1;
-            //                break;
-            //            }
-            //        // didn't find one, so quit
-            //        if (albCnt >= allocationBlockMap.Length)
-            //        {
-            //            result = 0;
-            //            break;
-            //        }
-            //        // write # of sectors in allocation block
-            //        for (var i = 0; i < sectorBlock; i++)
-            //        {
-            //            var sectOffset = albCnt * albSize / sectorSize + i;
-            //            diskPtr = dirStart + sectOffset / spt * sectorSize * spt +
-            //                      skewMap[sectOffset % spt] * sectorSize;
-
-            //            for (var ctrIndex = 0; ctrIndex < sectorSize; ctrIndex++)
-            //                if (filei < len)
-            //                {
-            //                    buf[diskPtr++] = filebuf[filei++];
-            //                    sectorCPMCnt++;
-            //                    bytesWritten++;
-            //                }
-            //                else
-            //                    buf[diskPtr++] = 0x1a;
-
-            //        }
-
-            //        // update FCB in directory
-            //        if (albNumSize == 1)
-            //        {
-            //            buf[diski + 16 + albDirCnt++] = (byte)albCnt;
-            //        }
-            //        else
-            //        {
-            //            buf[diski + 16 + albDirCnt++] = (byte)albCnt;
-            //            buf[diski + 16 + albDirCnt++] = (byte)(albCnt / 256);
-            //        }
-
-            //        // Only write 8 ALB for a 400k disk
-            //        if ((diskType == 0x63 || diskType == 0x67) && albDirCnt == 8)
-            //            break;
-            //    }
-
-            //    if (diskType == 0x23 && albDirCnt > 8)
-            //    {
-            //        extentNum++; // Type 23 is for Z100 CP/M. Loads 32k in one extant
-            //        buf[diski + 15] = (byte)Math.Ceiling((double)sectorCPMCnt / 256);
-            //    }
-            //    else
-            //    {
-            //        buf[diski + 15] = (byte)Math.Ceiling((double)sectorCPMCnt / 128);
-            //    }
-            //    buf[diski + 12] = extentNum++;  // who knew I was this smart. Didn't remember covering this important feature
-            //    //var t2 = sectorCPMCnt / 128;
-            //    //var t3 = Math.Ceiling((double)sectorCPMCnt / 128);
-            //    //buf[diski + 15] = (byte)Math.Ceiling((double)sectorCPMCnt / 128);
-            //}
-
-            //if (result == 0)        // not enough directory entries or allocation blocks
-            //{
-            //    while (--dirListi >= 0)
-            //        if (dirList[dirListi] > 0)
-            //            buf[dirList[dirListi]] = 0xe5;
-            //}
             return result;
         }
 
@@ -398,7 +335,7 @@ namespace HDOS
         // update file count and total file size
         public void ReadHdosDir(string diskFileName, ref int diskTotal)
         {
-            int result = 0, fileLen = 0;
+            int result = 0; 
             var encoding = new UTF8Encoding();
             int
                 dirBufPtr = 0,
@@ -508,34 +445,41 @@ namespace HDOS
 
                     // flags
                     var flagStr = HdosFlag(buf[dirBufPtr + 0xe], (byte)diskInitVer);
+                    
+                    // File Creation Date
+                    var fDate = buf[dirBufPtr + 0x13] * 256 + buf[dirBufPtr + 0x14];
 
-                    // Calculate file size
-                    var fileDirSize = diskSectorPerGroup;
-
+                    // Create temp storage
                     firstGroup = buf[dirBufPtr + 0x10];
                     nextGroup = firstGroup;
                     lastGroup = buf[dirBufPtr + 0x11];
                     lastGroupSector = buf[dirBufPtr + 0x12];
 
-                    var fileNext = buf[dirBufPtr + 0x10];
+                    var temp = new DirList(fnameStr,  flagStr, userArea, firstGroup,
+                        lastGroup, lastGroupSector); // temp storage
+                    
+                    // Calculate file size
+                    var fileDirSize = diskSectorPerGroup;
+                    temp.grtList = new List<int> {firstGroup};
+                    var fileNext = firstGroup;
                     var cnt = 0; // safety counter
+                    
                     while ((fileNext != 0) && (cnt++ < 255))
                     {
                         fileNext = buf[diskGrtStart + fileNext];
+ 
                         if (fileNext != 0)
+                        {
+                            temp.grtList.Add(fileNext);
                             fileDirSize += diskSectorPerGroup;
+                        }
                         else
                         {
                             fileDirSize += buf[dirBufPtr + 0x12] - diskSectorPerGroup;
                         }
                     }
 
-                    // File Creation Date
-                    var fDate = buf[dirBufPtr + 0x13] * 256 + buf[dirBufPtr + 0x14];
-
-                    // load data to list
-                    var temp = new DirList(fnameStr, fileDirSize, flagStr, userArea, firstGroup,
-                        lastGroup, lastGroupSector); // temp storage
+                    var tt2 = temp.grtList.Count;
                     temp.fCluster = cnt * diskSectorPerGroup;
                     Array.Copy(buf, dirBufPtr, temp.fnameB, 0, 11); // copy byte filename
                     temp.createDate = HdosDateStr(fDate);
@@ -571,6 +515,19 @@ namespace HDOS
 
             fileNameList.Sort();
         }
+
+        // ************** HdosDate  *********************
+        // inputs: int day, month, year
+        // output: Date int, Bit format "MMMDDDDDYYYYYYYM"
+
+        private int HdosDate(int d, int m, int y)
+        {
+            d = d << 8;
+            m = (m & 0x07) << 16 + (m & 0x08) >> 3;
+            y = (y-1970) << 1;
+            return d + m + y;
+        }
+
         // ************** HdosDateStr  *********************
         // inputs: Date int, Bit format "MMMDDDDDYYYYYYYM"
         // output: flag string
@@ -586,7 +543,9 @@ namespace HDOS
                 month = 11;
             var day = (date & 0x1f00) >> 8;
             var year = ((date & 0x0fe) >> 1) + 70;
-
+            if(year > 100)
+                year -= 100;
+            
             result = string.Format("{0:D}-{1}-{2:D}", day, months[month], year);
 
             return result;
@@ -667,7 +626,7 @@ namespace HDOS
         }
 
         // **************  Extract File HDOS *********************
-        // inputs: flag, HDOS version
+        // inputs: Form1 DiskFileEntry with disk image name
         // output: flag string
         public int ExtractFileHDOS(Form1.DiskFileEntry disk_file_entry)
         {
@@ -675,69 +634,61 @@ namespace HDOS
             var maxBuffSize = 0x2000; // largest allocation block size
             var diskTotal = 0;
 
-            //var disk_image_file = disk_file_entry.DiskImageName;
-            //if (disk_image_file != DiskImageImdActive) ReadCpmDir(disk_image_file, ref diskTotal);
+            var disk_image_file = disk_file_entry.DiskImageName;
+            if (disk_image_file != DiskImageActive) 
+                ReadHdosDir(disk_image_file, ref diskTotal);
 
-            //var encoding = new UTF8Encoding();
-            //var dir = string.Format("{0}_Files", disk_image_file); // create directory name and check if directory exists
-            //if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            var encoding = new UTF8Encoding();
+            var dir = string.Format("{0}_Files", disk_image_file); // create directory name and check if directory exists
+            if (!Directory.Exists(dir)) 
+                Directory.CreateDirectory(dir);
             //fnameb = encoding.GetBytes(disk_file_entry.FileName);
 
-            //// Create output File
-            //var name = disk_file_entry.FileName.Substring(2, 8).Trim(' ');
-            //var ext = disk_file_entry.FileName.Substring(10, 3).Trim(' ');
-            //var file_name = string.Format("{0}\\{1}.{2}", dir, name, ext);
+            // Create output File
+            var name = disk_file_entry.FileName.Substring(0, 8).Trim(' ');
+            var ext = disk_file_entry.FileName.Substring(8, 3).Trim(' ');
+            var file_name = string.Format("{0}\\{1}.{2}", dir, name, ext);
 
-            //if (File.Exists(file_name))
-            //    if (MessageBox.Show("File exists, Overwrite it?", "File Exists", MessageBoxButtons.YesNo) ==
-            //        DialogResult.No)
-            //    {
-            //        result = 0;
-            //        return result;
-            //    }
+            if (File.Exists(file_name))
+                if (MessageBox.Show("File exists, Overwrite it?", name+'.'+ext, MessageBoxButtons.YesNo) ==
+                    DialogResult.No)
+                {
+                    result = 0;
+                    return result;
+                }
 
-            //var file_out = File.Create(file_name);
-            //var bin_out = new BinaryWriter(file_out);
+            var file_out = File.Create(file_name);
+            var bin_out = new BinaryWriter(file_out);
 
-            //var skewMap = BuildSkew(intLv, spt, sptStart);
+ 
+            // Find filename in DIRList
+            var obj = fileNameList.FirstOrDefault(x => x.fname == disk_file_entry.FileName);
+            if (obj != null)
+            {
+                var rBptr = 0; // read buffer ptr
+                var wBptr = 0; // write buffer ptr
+                var wBuff = new byte[obj.fsize *diskSectorPerGroup*256+ 256]; //   create write buffer
+                //var first = obj.fGroup;
+                var last = obj.lGroup;
+                var numSects = diskSectorPerGroup;
+                var tt = obj.grtList.First() * diskSectorPerGroup * 256;
+                var binaryFile = buf[obj.grtList.First() * diskSectorPerGroup * 256];
 
-            //// Find filename in DIRList
-            //var obj = fileNameList.FirstOrDefault(x => x.fname == disk_file_entry.FileName);
-            //if (obj != null)
-            //{
-            //    var rBptr = 0; // read buffer ptr
-            //    var wBptr = 0; // write buffer ptr
-            //    var wBuff = new byte[obj.fsize + 256]; //   write buffer
+                foreach (var f in obj.grtList)
+                {
+                    rBptr = f * diskSectorPerGroup * 256;
+                    if (f == last)
+                        numSects = obj.lastGroupSector;
+                    for (var i = 0; i < 256 * numSects; i++)
+                        wBuff[wBptr++] = buf[rBptr + i];
+                }
+                if(binaryFile != 0xff)
+                    while (wBuff[--wBptr] == 0) ;
+                bin_out.Write(wBuff, 0, wBptr);
+            }
 
-            //    foreach (var f in obj.fcbList)
-            //    {
-            //        var fcbNum = f.fcbnum;      // number of 128 byte records to get
-            //        for (var i = 0; i < 16; i++)
-            //            if (f.fcb[i] > 0) // allocation block to get
-            //            {
-
-            //                for (var k = 0; k < albSize / sectorSize; k++) // read the sectors in the allocation block
-            //                {
-            //                    //GetALB(ref buff, 0, bin_file, f.fcb[i], dirStart, allocBlock, sectorSize, spt, skewMap);
-            //                    var sectOffset = f.fcb[i] * albSize / sectorSize + k;
-            //                    var tracks = (dirStart + sectOffset) / (spt * sectorSize);
-            //                    var baseSect = (dirStart + sectOffset - tracks * (spt * sectorSize)) / sectorSize;
-            //                    rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
-            //                    // + (sectOffset % spt) * sectorSize;
-            //                    var j = 0;
-            //                    for (; j < sectorSize / 128 && j < fcbNum; j++)
-            //                        for (var l = 0; l < 128; l++)
-            //                            wBuff[wBptr++] = buf[rBptr++];
-            //                    fcbNum -= j;
-            //                }
-            //            }
-            //    }
-
-            //    bin_out.Write(wBuff, 0, wBptr);
-            //}
-
-            //bin_out.Close();
-            //file_out.Close();
+            bin_out.Close();
+            file_out.Close();
 
             return result;
         }
@@ -748,62 +699,45 @@ namespace HDOS
         public byte[] ViewFileHDOS(string fileName)
         {
 
-            //if (DiskImageImdActive.Length > 0)
-            //{
-            //    var skewMap = BuildSkew(intLv, spt, sptStart);
+            if (DiskImageActive.Length > 0)
+            {
+                var obj = fileNameList.FirstOrDefault(x => x.fname == fileName);
+                if (obj != null)
+                {
+                    var rBptr = 0; // read buffer ptr
+                    var wBptr = 0; // write buffer ptr
+                    var buffSize = obj.fsize;
+                    var last = obj.lGroup;
+                    var numSects = diskSectorPerGroup;
+                    var wBuff = new byte[buffSize]; //   write buffer + 256 removed
 
-            //    var obj = fileNameList.FirstOrDefault(x => x.fname == fileName);
-            //    if (obj != null)
-            //    {
-            //        var rBptr = 0; // read buffer ptr
-            //        var wBptr = 0; // write buffer ptr
-            //        var buffSize = obj.fsize;
-            //        var wBuff = new byte[buffSize]; //   write buffer + 256 removed
+                    foreach (var f in obj.grtList)
+                    {
+                        rBptr = f * diskSectorPerGroup * 256;
+                        if (f == last)
+                            numSects = obj.lastGroupSector;
+                        for (var i = 0; i < 256 * numSects; i++)
+                            wBuff[wBptr++] = buf[rBptr + i];
+                    }
+                    // look for 0x1A to indicate end of text file
+                    var chk = 0;
+                    for (; chk < buffSize; chk++)
+                    {
+                        if (wBuff[chk] == 0x1a)
+                            break;
+                    }
+                    if (chk == buffSize)
+                        return wBuff;
+                    else
+                    {
+                        var wBuff1 = new byte[chk];
+                        for (var i = 0; i < chk; i++)
+                            wBuff1[i] = wBuff[i];
+                        return wBuff1;
+                    }
+                }
 
-            //        foreach (var f in obj.fcbList)
-            //        {
-            //            var fcbNum = f.fcbnum;
-            //            for (var i = 0; i < 16; i++)
-            //                if (f.fcb[i] > 0) // allocation block to get
-            //                    for (var k = 0;
-            //                        k < albSize / sectorSize;
-            //                        k++) // read the sectors in the allocation block
-            //                    {
-            //                        //GetALB(ref buff, 0, bin_file, f.fcb[i], dirStart, allocBlock, sectorSize, spt, skewMap);
-            //                        var t0 = f.fcb[i];
-            //                        var sectOffset = f.fcb[i] * albSize / sectorSize + k; // sector to get
-            //                                                                              //var t1 = sectOffset % spt; // sector to get on the track
-            //                                                                              //var t2 = sectOffset / spt; // # of tracks
-            //                                                                              // it looks like you can take out the spt but the order does make a difference in the result
-            //                        rBptr = dirStart + sectOffset / spt * sectorSize * spt +
-            //                                skewMap[sectOffset % spt] * sectorSize;
-
-            //                        var j = 0;
-            //                        for (; j < sectorSize / 128 && j < fcbNum; j++)
-            //                            for (var l = 0; l < 128; l++)
-            //                                wBuff[wBptr++] = buf[rBptr++];
-            //                        fcbNum -= j;
-            //                    }
-            //        }
-            //        // look for 0x1A to indicate end of text file
-            //        var chk = 0;
-            //        for (; chk < buffSize; chk++)
-            //        {
-            //            if (wBuff[chk] == 0x1a)
-            //                break;
-            //        }
-            //        if (chk == buffSize)
-            //            return wBuff;
-            //        else
-            //        {
-            //            var wBuff1 = new byte[chk];
-            //            for (var i = 0; i < chk; i++)
-            //                wBuff1[i] = wBuff[i];
-            //            return wBuff1;
-            //        }
-            //    }
-
-            //}
+            }
             var fileImage = new byte[1];
             fileImage[0] = 0;
             return fileImage;
@@ -911,8 +845,6 @@ namespace HDOS
 
             // DIRECT.SYS
 
-            //var dirEntryLen = 22;
-             
             var dirSize = sectorsCluster;
             if (diskTotal < 104000)
                 dirSize = 4;

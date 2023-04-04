@@ -962,7 +962,7 @@ namespace CPM
             var file_name = string.Format("{0}\\{1}.{2}", dir, name, ext);
 
             if (File.Exists(file_name))
-                if (MessageBox.Show("File exists, Overwrite it?", "File Exists", MessageBoxButtons.YesNo) ==
+                if (MessageBox.Show("File exists, Overwrite it?", name+'.'+ext, MessageBoxButtons.YesNo) ==
                     DialogResult.No)
                 {
                     result = 0;
@@ -981,6 +981,7 @@ namespace CPM
                 var rBptr = 0; // read buffer ptr
                 var wBptr = 0; // write buffer ptr
                 var wBuff = new byte[obj.fsize + 256]; //   write buffer
+                var fileType = buf[rBptr];
 
                 foreach (var f in obj.fcbList)
                 {
@@ -1005,7 +1006,9 @@ namespace CPM
                             }
                         }
                 }
-
+                if(fileType == 0xc3)        // get rid of EOF marker
+                    while (buf[--wBptr] == 0x1a)
+                        ;
                 bin_out.Write(wBuff, 0, wBptr);
             }
 

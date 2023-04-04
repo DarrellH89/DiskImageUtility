@@ -212,6 +212,7 @@ namespace DiskUtility
         {
             var getHdos = new HDOSFile();
             string path = fileName;
+            int diskTotalBytes = 0;
 
             OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
 
@@ -232,7 +233,7 @@ namespace DiskUtility
             //Console.WriteLine("Result: {0:G}", result);
             if (!result) // create blank file image
             {
-                int diskTotalBytes = 0;
+                diskTotalBytes = 0;
                 switch (diskType)
                 {
                     case 1:
@@ -250,9 +251,41 @@ namespace DiskUtility
 
                 if (!getHdos.InitHdosDisk(diskTotalBytes, path))
                     MessageBox.Show("HDOS File Creation Error", "HDOS Create", MessageBoxButtons.OK);
-
-
             }
+            /* Use ReadHdosDir to read disk into HDOSFiles buffer. After the file is in the buffer, add
+             * each new file. Write HDOSFiles buffer to disk if any files are successfully added
+            */
+            getHdos.ReadHdosDir(path, ref diskTotalBytes);
+
+
+
+
+            // Get Files to add to image
+            var startDir = tbFolder.Text;   // check if a working folder is selected
+            var fileCnt = 0;
+
+            if (startDir == "") startDir = "c:\\";
+            openFileDialog1.InitialDirectory = startDir;
+            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            openFileDialog1.FilterIndex = 2;
+            openFileDialog1.RestoreDirectory = true;
+            openFileDialog1.Multiselect = true;
+            openFileDialog1.Title = "Select Files to Add to Image";
+            string temp = "";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                foreach (String filename in openFileDialog1.FileNames)
+                    fileCnt += getHdos.InsertFileHdos(filename);
+            if (fileCnt > 0) // Added a file or two
+            {
+                FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
+                BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
+
+                fileOutBytes.Seek(0, SeekOrigin.Current);
+                fileOutBytes.Write(getHdos.buf, 0, getHdos.fileLen);
+                fileOutBytes.Close();
+                fsOut.Dispose();
+            }
+            buttonFolder_Init(start);
         }
 
         /******************** File Create File for CP/M *******************************/
@@ -512,64 +545,61 @@ namespace DiskUtility
 
 
 
-        private void TestCPM_click(object sender, EventArgs e)
-        {
-            var cpmTest = new CPMFile();
-            OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            var path = "TestCPM.H37";
-            openFileDialog1.InitialDirectory = tbFolder.Text;
-            openFileDialog1.Filter = "H37 files (*.H37)|*.H37";
-                openFileDialog1.FilterIndex = 2;
-                openFileDialog1.RestoreDirectory = true;
-                openFileDialog1.CheckFileExists = false;
-                openFileDialog1.ShowDialog();
-                path = openFileDialog1.FileName;
+        //private void TestCPM_click(object sender, EventArgs e)
+        //{
+        //    var cpmTest = new CPMFile();
+        //    OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+        //    var path = "TestCPM.H37";
+        //    openFileDialog1.InitialDirectory = tbFolder.Text;
+        //    openFileDialog1.Filter = "H37 files (*.H37)|*.H37";
+        //        openFileDialog1.FilterIndex = 2;
+        //        openFileDialog1.RestoreDirectory = true;
+        //        openFileDialog1.CheckFileExists = false;
+        //        openFileDialog1.ShowDialog();
+        //        path = openFileDialog1.FileName;
 
-            int diskType = 0x6f;
-            int diskTotalBytes = cpmTest.DiskType[diskType, 6] * cpmTest.DiskType[diskType, 7] *
-                             cpmTest.DiskType[diskType, 8];
-            var cpmBuf = new byte[diskTotalBytes];
-            for (var i = 0; i < diskTotalBytes; i++)
-                cpmBuf[i] = 0xE5;
-            cpmBuf[cpmTest.H37disktype] = (byte)cpmTest.DiskType[diskType, 0]; // set disk type marker
+        //    int diskType = 0x6f;
+        //    int diskTotalBytes = cpmTest.DiskType[diskType, 6] * cpmTest.DiskType[diskType, 7] *
+        //                     cpmTest.DiskType[diskType, 8];
+        //    var cpmBuf = new byte[diskTotalBytes];
+        //    for (var i = 0; i < diskTotalBytes; i++)
+        //        cpmBuf[i] = 0xE5;
+        //    cpmBuf[cpmTest.H37disktype] = (byte)cpmTest.DiskType[diskType, 0]; // set disk type marker
 
-            byte[] diskMark1 = { 0, 0x6f, 0xe5, 8, 0x10, 0xe5, 0xe5, 1, 0xe5, 0x28, 0, 4, 0xf, 0, 0x8a, 0x01, 0xff, 0, 0xf0, 0, 0x40, 0, 2, 0, 0xec };
-                    for (var i = 0; i < diskMark1.Length; i++)
-                        cpmBuf[cpmTest.H37disktype - 1 + i] = diskMark1[i];
-            FileStream fso = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
-            BinaryWriter fileOutByte = new BinaryWriter(fso);
+        //    byte[] diskMark1 = { 0, 0x6f, 0xe5, 8, 0x10, 0xe5, 0xe5, 1, 0xe5, 0x28, 0, 4, 0xf, 0, 0x8a, 0x01, 0xff, 0, 0xf0, 0, 0x40, 0, 2, 0, 0xec };
+        //            for (var i = 0; i < diskMark1.Length; i++)
+        //                cpmBuf[cpmTest.H37disktype - 1 + i] = diskMark1[i];
+        //    FileStream fso = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+        //    BinaryWriter fileOutByte = new BinaryWriter(fso);
 
-            fileOutByte.Write(cpmBuf, 0, diskTotalBytes);
-            fileOutByte.Close();
-            fso.Dispose();
-            cpmTest.ReadCpmDir(path, ref diskTotalBytes);
-            var startDir =
-                tbFolder.Text; // openFileDialog1.InitialDirectory; // check if a working folder is selected
-            var fileCnt = 0;
+        //    fileOutByte.Write(cpmBuf, 0, diskTotalBytes);
+        //    fileOutByte.Close();
+        //    fso.Dispose();
+        //    cpmTest.ReadCpmDir(path, ref diskTotalBytes);
+        //    var startDir =
+        //        tbFolder.Text; // openFileDialog1.InitialDirectory; // check if a working folder is selected
+        //    var fileCnt = 0;
 
-            if (startDir == "") startDir = "c:\\";
-            openFileDialog1.InitialDirectory = startDir;
-            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-            openFileDialog1.FilterIndex = 2;
-            openFileDialog1.RestoreDirectory = true;
-            openFileDialog1.Multiselect = true;
-            openFileDialog1.Title = "Select Files to Add to Image";
-            string temp = "";
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += cpmTest.InsertFileCpm(filename);
-
-
-            FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
-            BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
-
-            fileOutBytes.Seek(0, SeekOrigin.Current);
-            fileOutBytes.Write(cpmTest.buf, 0, diskTotalBytes);
-            fileOutBytes.Close();
-            fsOut.Dispose();
-            }
+        //    if (startDir == "") startDir = "c:\\";
+        //    openFileDialog1.InitialDirectory = startDir;
+        //    openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+        //    openFileDialog1.FilterIndex = 2;
+        //    openFileDialog1.RestoreDirectory = true;
+        //    openFileDialog1.Multiselect = true;
+        //    openFileDialog1.Title = "Select Files to Add to Image";
+        //    string temp = "";
+        //    if (openFileDialog1.ShowDialog() == DialogResult.OK)
+        //        foreach (String filename in openFileDialog1.FileNames)
+        //            fileCnt += cpmTest.InsertFileCpm(filename);
 
 
+        //    FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
+        //    BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
 
-        }
+        //    fileOutBytes.Seek(0, SeekOrigin.Current);
+        //    fileOutBytes.Write(cpmTest.buf, 0, diskTotalBytes);
+        //    fileOutBytes.Close();
+        //    fsOut.Dispose();
+        //    }
     }
+}

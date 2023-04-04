@@ -45,6 +45,7 @@ namespace DiskUtility
             public string fDate;
             public string fTime;
             public string fFlags;
+            public string fileType;
         }
 
         public ArrayList DiskFileList;
@@ -780,6 +781,7 @@ namespace DiskUtility
                     disk_file_entry.UserArea = f.userArea;
                     disk_file_entry.ListBox2Entry = listBoxFiles.Items.Count;
                     disk_file_entry.fFlags = f.flags;
+                    disk_file_entry.fileType = "CPM";
                     DiskFileList.Add(disk_file_entry);
                     double tempSize = f.fsize;
                     var tempfname = f.fname.Substring(2, 11);
@@ -830,6 +832,7 @@ namespace DiskUtility
                     disk_file_entry.UserArea = f.userArea;
                     disk_file_entry.ListBox2Entry = listBoxFiles.Items.Count;
                     disk_file_entry.fFlags = f.flags;
+                    disk_file_entry.fileType = "H37";
                     DiskFileList.Add(disk_file_entry);
                     var tempStr = disk_file_entry.FileName.Substring(2, 11);
                     tempStr = tempStr.Insert(8, " ");
@@ -886,6 +889,7 @@ namespace DiskUtility
                     disk_file_entry.ListBox2Entry = listBoxFiles.Items.Count;
                     disk_file_entry.fFlags = f.flags;
                     disk_file_entry.fDate = f.createDate;
+                    disk_file_entry.fileType = "HDOS";
                     DiskFileList.Add(disk_file_entry);
                     int tt = 0;
                     var tempStr = disk_file_entry.FileName.Substring(0, 11);
@@ -943,6 +947,7 @@ namespace DiskUtility
                     disk_file_entry.fDate = getDosFile.DosDateStr(f.fdate);
                     disk_file_entry.fTime = getDosFile.DosTimeStr( f.ftime);
                     disk_file_entry.fFlags = f.flags;
+                    disk_file_entry.fileType = "DOS";
                     DiskFileList.Add(disk_file_entry);
 
                     var tempStr = f.fname;
@@ -1020,10 +1025,11 @@ namespace DiskUtility
           
 
                 // dcp Add CPM File view for H37, IMG, and H8D disks
-                var fileType = (disk_image_file.ToUpper().Contains(".H37") || disk_image_file.ToUpper().Contains(".H8D")
-                    ||  disk_image_file.ToUpper().Contains(".IMG") )&&( !disk_image_file.ToUpper().Contains(".DOS.") && !disk_image_file.ToUpper().EndsWith(".IMD"));
+                //var fileType = (disk_image_file.ToUpper().Contains(".H37") || disk_image_file.ToUpper().Contains(".H8D")
+                //    ||  disk_image_file.ToUpper().Contains(".IMG") )&&( !disk_image_file.ToUpper().Contains(".DOS.") 
+                //                                                        && !disk_image_file.ToUpper().EndsWith(".IMD"));
 
-                if (fileType)
+                if (disk_file_entry.fileType == "CPM")
                 {
                     FileViewerBorder.Visible = true;
 
@@ -1040,10 +1046,24 @@ namespace DiskUtility
                     FileViewerBox.BringToFront();
 
                 }
-                else
+                if (disk_file_entry.fileType == "HDOS")
                 {
-                    MessageBox.Show("View not supported for this disk image type", "View Error", MessageBoxButtons.OK);
+                    FileViewerBorder.Visible = true;
+
+                    var diskTotal = 0;
+                    var getHdosFile = new HDOSFile();
+                    getHdosFile.ReadHdosDir(disk_image_file, ref diskTotal);
+                    var buff = getHdosFile.ViewFileHDOS(disk_file_entry.FileName);
+                    var encoding = new UTF8Encoding();
+                    var t = encoding.GetString(buff);
+                    var newTitleStr = "File Viewer: " + disk_file_entry.FileName.ToString() + " Length: " + buff.Length.ToString();
+                    FileViewerBorder.Text = newTitleStr;
+                    FileViewerBox.AppendText(t);
+                    FileViewerBorder.BringToFront();
+                    FileViewerBox.BringToFront();
                 }
+                else
+                    MessageBox.Show("View not supported for this disk image type", "View Error", MessageBoxButtons.OK);
 
   
         }
@@ -1054,10 +1074,27 @@ namespace DiskUtility
         }
 
 
-      
-  
 
-        private int ExtractFile(DiskFileEntry disk_file_entry)
+        private int ExtractHdosFile(DiskFileEntry disk_file_entry)
+        {
+            var result = 1; // dcp extracted file count to deal with CP/M file extract fail
+            /*
+            var disk_image_file = disk_file_entry.DiskImageName;
+            var file = File.OpenRead(disk_image_file);
+            var bin_file = new BinaryReader(file);
+            var buf = bin_file.ReadBytes(256);
+          */
+
+            // dcp Add CPM Extract
+            var getHdosFile = new HDOSFile(); // create instance of CPMFile, then call function
+            result = getHdosFile.ExtractFileHDOS(disk_file_entry);
+
+
+            return result;
+        }
+
+
+        private int ExtractCpmFile(DiskFileEntry disk_file_entry)
         {
             var result = 1; // dcp extracted file count to deal with CP/M file extract fail
             /*
@@ -1117,9 +1154,11 @@ namespace DiskUtility
                                 files_extracted += getCpmFile.ExtractFileCPMImd(entry);
                             else if (entry.DiskImageName.Contains(".DOS"))
                                 files_extracted += ExtractDosFile(entry);
-                            else
-                                files_extracted += ExtractFile(entry);
-                            break;
+                            else if(entry.fileType == "CPM")
+                                 files_extracted += ExtractCpmFile(entry);
+                            else if(entry.fileType == "HDOS")
+                                files_extracted += ExtractHdosFile(entry);
+                            //break;
                         }
                 }
 
@@ -1131,7 +1170,19 @@ namespace DiskUtility
                         string.Format("There are a total of {0} files. Extract all files?", DiskFileList.Count),
                         "EXTRACT FILES", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     foreach (DiskFileEntry entry in DiskFileList)
-                        files_extracted += ExtractFile(entry);
+                    {
+                        // dcp changed Extract file to return 1 if successful
+                        if (entry.DiskImageName.Contains(".IMD"))
+                            //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
+                            files_extracted += getCpmFile.ExtractFileCPMImd(entry);
+                        else if (entry.DiskImageName.Contains(".DOS"))
+                            files_extracted += ExtractDosFile(entry);
+                        else if (entry.fileType == "CPM")
+                            files_extracted += ExtractCpmFile(entry);
+                        else if (entry.fileType == "HDOS")
+                            files_extracted += ExtractHdosFile(entry);
+                       // break; ;
+                    }
             }
 
             if (files_extracted > 0)
