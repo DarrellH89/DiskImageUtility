@@ -392,8 +392,8 @@ class MsdosFile
                 return; // list is current do nothing
             }
 
-            if(diskTotal == 327680 ) diskType = 0xff;
-                else if(diskTotal == 368640) diskType = (int)buf[0x15];
+            if(diskTotal == 327680 || diskTotal == 327712 ) diskType = 0xff;
+            else if(diskTotal == 368640) diskType = (int)buf[0x15];
                     else diskType = (int)buf[0x15];
             int ctr,
                 bufPtr = 0;
