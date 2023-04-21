@@ -78,7 +78,7 @@ namespace CPM
             {0x6b, 0x800, 0x2000, 2, 0x2000, 3, 16, 0x100, 80, 2, 12}, // 2 640k H37 96tpi DD DS
             {0x67, 0x800, 0x2800, 1, 0x2000, 3, 5, 0x400, 40, 2, 4}, //   3 400k H37 48tpi ED DS
             {0x23, 0x800, 0x2000, 1, 0x2000, 1, 8, 0x200, 40, 2, 0}, //   4 320k Z100 48tpi DD DS
-            {0x62, 0x400, 0x1000, 1, 0x2000, 3, 16, 0x100, 40, 1, 12}, // 5 160k H37 48tpi DD SS
+            {0x62, 0x400, 0x2000, 1, 0x1000, 3, 16, 0x100, 40, 1, 12}, // 5 160k H37 48tpi DD SS 2=1000
             {0x63, 0x800, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   6 320k H37 48tpi DD DS
             {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   7 100k H37 48tpi DD SS
             {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   8 100k Default H17 48tpi SD SS
@@ -226,13 +226,13 @@ namespace CPM
                 {
                     if (fileByte.Read(buf, 0, bufferSize) != fileLen || fileLen < 256)
                     {
-                        MessageBox.Show("IMD file read error", "Error", MessageBoxButtons.OK);
+                        MessageBox.Show("IMD file read error", diskFileName, MessageBoxButtons.OK);
                         return result;
                     }
                 }
                 catch
                 {
-                    MessageBox.Show("File buffer too small", "Error", MessageBoxButtons.OK);
+                    MessageBox.Show("File buffer too small", diskFileName, MessageBoxButtons.OK);
                     return result;
                 }
 
@@ -254,7 +254,7 @@ namespace CPM
                 if (spt == 0)
                 {
                     DiskImageImdActive = "";  // data read fail
-                    MessageBox.Show("Sector Per Track read as 0", "Error",
+                    MessageBox.Show("Sector Per Track read as 0", diskFileName,
                         MessageBoxButtons.OK);
                     return result;
                 }
@@ -304,8 +304,7 @@ namespace CPM
                             break;
                         default:
                             MessageBox.Show("IMD sector marker out of scope "+buf[bufPtr].ToString("X2")
-                                +" at location "+ bufPtr.ToString("X8"), "Error",
-                                MessageBoxButtons.OK);
+                                +" at location "+ bufPtr.ToString("X8"), diskFileName,MessageBoxButtons.OK);
                             DiskImageImdActive = "";        // disk read failed, mark disk image inactive
                             return result;
                     }
@@ -343,14 +342,14 @@ namespace CPM
 
                 // error if no match found
                 if (ctr == DiskType.GetLength(0))
-                    MessageBox.Show("CP/M Disk Type not found in IMD File", "Error", MessageBoxButtons.OK);
+                    MessageBox.Show("CP/M Disk Type not found in IMD File", diskFileName, MessageBoxButtons.OK);
                 else
                     result = 1;
 
 
                 if ((spt != sptD || sectorSize != sectorSizeD) && result == 1)
                 {
-                    MessageBox.Show("Sector/track or sector size mismatch", "Error", MessageBoxButtons.OK);
+                    MessageBox.Show("Sector/track or sector size mismatch", diskFileName, MessageBoxButtons.OK);
                     result = 0;
                 }
 
@@ -469,7 +468,7 @@ namespace CPM
                 var file_name = string.Format("{0}\\{1}.{2}", dir, name, ext);
 
                 if (File.Exists(file_name))
-                    if (MessageBox.Show("File exists, Overwrite it?", "File Exists", MessageBoxButtons.YesNo) ==
+                    if (MessageBox.Show("File exists, Overwrite it?", file_name, MessageBoxButtons.YesNo) ==
                         DialogResult.No)
                     {
                         result = 0;
@@ -610,7 +609,7 @@ namespace CPM
                                 break; // compare filename to filename in directory
                         if (fcPtr == 12)
                         {
-                            MessageBox.Show("File already in Directory. Skipping", "File Exists", MessageBoxButtons.OK);
+                            MessageBox.Show("File already in Directory. Skipping", fn.ToString(), MessageBoxButtons.OK);
                             return 0;
                         }
 
@@ -779,13 +778,13 @@ namespace CPM
                 {
                     if (fileByte.Read(buf, 0, bufferSize) != fileLen||fileLen < 256)
                     {
-                        MessageBox.Show("File read error", "Error", MessageBoxButtons.OK);
+                        MessageBox.Show("File read error",diskFileName, MessageBoxButtons.OK);
                         return;
                     }
                 }
                 catch
                 {
-                    MessageBox.Show("File buffer too small", "Error", MessageBoxButtons.OK);
+                    MessageBox.Show("File buffer too small", diskFileName, MessageBoxButtons.OK);
                     return;
                 }
 
@@ -841,7 +840,7 @@ namespace CPM
             }
             else
             {
-                MessageBox.Show("Could not determine CP/M Disk type", "Error", MessageBoxButtons.OK);
+                MessageBox.Show("Could not determine CP/M Disk type", diskFileName, MessageBoxButtons.OK);
                 return;
             }
             if (H8dLLL) // using default, check file size
@@ -862,7 +861,7 @@ namespace CPM
 
             // error if no match found
             if (ctr == DiskType.GetLength(0))
-                MessageBox.Show("Error - CP/M Disk Type not found in File", "Error", MessageBoxButtons.OK);
+                MessageBox.Show("Error - CP/M Disk Type not found in File", diskFileName, MessageBoxButtons.OK);
             else
                 result = 1;
             if (Form1.IsHDOSDisk(ref buf))          // don't handle HDOS disks currently
@@ -1096,8 +1095,8 @@ namespace CPM
             {
                 var tsizebuff = buffer[5] ;
                     var tsize = DiskType[ctr, 0];
-                    var tdisk = DiskType[ctr, 6] * DiskType[ctr, 7] * DiskType[ctr, 8] * DiskType[ctr, 9];
-                    if ((filelen == DiskType[ctr, 6] * DiskType[ctr, 7] * DiskType[ctr, 8] * DiskType[ctr, 9]))
+                    var diskLen = DiskType[ctr, 6] * DiskType[ctr, 7] * DiskType[ctr, 8] * DiskType[ctr, 9];
+                    if ((filelen == diskLen)|| filelen == diskLen+32)       // allows for H37 format
                     {
                         if (buffer[5] == DiskType[ctr, 0])
                             break;

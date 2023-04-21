@@ -6,21 +6,23 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Windows.Forms;
 using static DiskUtility.Form1;
+using IDLDESC = System.Runtime.InteropServices.IDLDESC;
 
 namespace HDOS
 {
     public class HDOSFile
     {
         // test bit 7 for the following filename chars
-        private const byte FRead = 9; //  Read only
-        private const byte FSys = 10; // 1 = true
-        private const byte FChg = 11; // bit 7 means file changed
+        //private const byte FRead = 9; //  Read only
+        //private const byte FSys = 10; // 1 = true
+        //private const byte FChg = 11; // bit 7 means file changed
 
-        private const byte FMask = 0x80; // bit mask
+        //private const byte FMask = 0x80; // bit mask
         //private const int BuffLen = 0x2000; // buffer size
 
 
@@ -30,13 +32,7 @@ namespace HDOS
         public byte[] buf = new byte[bufferSize];
 
         public string addFilename = "";
-        //private const int sectorMax = 18 * 160; // max number of tracks
-        //private int[]
-        //    diskMap = new int[sectorMax]; // an array of buffer pointers in buf[] for each sector on the disk starting with track 0, side 0
 
-        //private int diskVol = 2; // size of ALB size in directory
-        //private int albSize = 512; // size of an alloction block
-        //private int dirSectStart = 15; // starting sector for disk directory counting from 0. Also first ALB.
         private string DiskImageActive = "";
         private long diskSize = 0;
 
@@ -67,10 +63,10 @@ namespace HDOS
         // 0.Disk type, 1.# Track, 2. Sectors per Track, 3. Groups, 4. SPG 5. Available Sectors, 6. Size, 7 Heads
         public int[,] DiskType =
         {
-            // 0    1  2    3   4   5    6        7
+            // 0    1  2    3    4     5    6      7
             { 0x6b, 80, 16, 255, 10, 2550, 655360, 2 }, // 1 640k H37 96tpi DD DS
-            { 0x00, 40, 16, 213, 6, 1278, 327680, 2 }, //  6 320k H37 48tpi DD DS
-            { 0x60, 40, 10, 200, 2, 400, 102400, 1 }, //   7 100k H37 48tpi DD SS
+            { 0x00, 40, 16, 213,  6, 1278, 327680, 2 }, //  6 320k H37 48tpi DD DS
+            { 0x60, 40, 10, 200,  2,  400, 102400, 1 }, //   7 100k H37 48tpi DD SS
 
         };
 
@@ -202,7 +198,7 @@ namespace HDOS
         {
             var result = 1;
             long
-                diskItemp,
+                //diskItemp,
                 filei = 0; // file buffer index
 
 
@@ -238,7 +234,7 @@ namespace HDOS
             var obj = fileNameList.FirstOrDefault(x => x.fname == fileNameStr);
             if (obj != null)
             {
-                MessageBox.Show("File Exists in image. Skipping", "File Exists", MessageBoxButtons.OK);
+                MessageBox.Show("File Exists in image. Skipping", fileNameStr, MessageBoxButtons.OK);
                 return 0;
             }
 
@@ -250,7 +246,7 @@ namespace HDOS
             while (!found && startDir != 0)
             {
                 while (cntDirs < dirCnt && !found)
-                    if (buf[startDir + cntDirs * dirLen] == 0xff)
+                    if (buf[startDir + cntDirs * dirLen] > 0xfd)
                     {
                         found = true;
                         startDir += cntDirs * dirLen;
@@ -260,6 +256,17 @@ namespace HDOS
                 if (!found)
                 {
                     startDir = (buf[startDir+510]+ buf[startDir + 511]*256)*256;
+                    // check for shorter than normal directories
+                    if (startDir % diskSectorPerGroup == 0)         // end of Group
+                    {
+                        if (buf[diskGrtStart + startDir / diskSectorPerGroup/256] == 0) // out of directory entries
+                        {
+                            MessageBox.Show("Not enough Directory entries", "Directory Full", MessageBoxButtons.OK);
+                            result = 0;
+                            break;
+                        }
+                    }
+                    cntDirs = 0;
                 }
             }
 
@@ -271,17 +278,22 @@ namespace HDOS
             if (cntFree * diskSectorPerGroup * 256 != padLen)
                 cntFree++;
             var numFree = 0;                                // Number of free groups
-            while (nextFree != 0 && numFree < cntFree-1)
+            if (result == 1)
             {
-                nextFree = buf[grtStart+nextFree];
-                numFree++;
+
+                while (nextFree != 0 && numFree < cntFree-1)
+                {
+                    nextFree = buf[grtStart+nextFree];
+                    numFree++;
+                }
+
+                if (nextFree == 0)
+                {
+                    MessageBox.Show("Not enough space on the disk. Skipping", "Disk Full", MessageBoxButtons.OK);
+                    result = 0;
+                }
             }
 
-            if (nextFree == 0)
-            {
-                MessageBox.Show("Not enough space on the disk. Skipping", "Disk Full", MessageBoxButtons.OK);
-                result = 0;
-            }
 
             if (result == 1)              // valid directory entry and space on disk
             {
@@ -359,13 +371,13 @@ namespace HDOS
                 {
                     if (fileByte.Read(buf, 0, bufferSize) != fileLen || fileLen < 256)
                     {
-                        MessageBox.Show("File read error", "Error", MessageBoxButtons.OK);
+                        MessageBox.Show("File read error", diskFileName, MessageBoxButtons.OK);
                         return;
                     }
                 }
                 catch
                 {
-                    MessageBox.Show("File buffer too small", "Error", MessageBoxButtons.OK);
+                    MessageBox.Show("File buffer too small", diskFileName, MessageBoxButtons.OK);
                     return;
                 }
 
@@ -419,6 +431,7 @@ namespace HDOS
             tempLabel[2] = (byte)(((diskInitVer & 0x0f) + 0x30));
             //tempLabel[2] = 0;
             diskLabel = "HDOS " + encoding.GetString(tempLabel, 0, 3) + ": " + diskLabel;
+            diskLabel = diskLabel.Replace('\0', ' ');
 
             result = 1; // stub error checking while I figure out if any checks make sense
             startGroupBufPtr = startDirBufPtr = dirBufPtr = diskDirectStart; // start of cluster
@@ -530,6 +543,12 @@ namespace HDOS
 
         // ************** HdosDateStr  *********************
         // inputs: Date int, Bit format "MMMDDDDDYYYYYYYM"
+        //This is the new y2k date encoding:
+        //15-----------9 8------5 4--------0
+        //| 7-bits | 4-bits | 5-bits |
+        //-------------- -------- ----------
+        //Year 00-99 Mon 1-12 Day 1-31
+        //
         // output: flag string
 
         string HdosDateStr(int date)
@@ -627,7 +646,7 @@ namespace HDOS
 
         // **************  Extract File HDOS *********************
         // inputs: Form1 DiskFileEntry with disk image name
-        // output: flag string
+        // output: File extracted count
         public int ExtractFileHDOS(Form1.DiskFileEntry disk_file_entry)
         {
             var result = 1; // assume success
@@ -689,6 +708,82 @@ namespace HDOS
 
             bin_out.Close();
             file_out.Close();
+
+            return result;
+        }
+        // **************  Delete File HDOS *********************
+        // inputs: Form1 DiskFileEntry with disk image name
+        /*
+             * filename = HDOS filename
+            * ref byte[] fileBuff
+            * Assumes ReadHdosDir already populated image parameters
+            */
+        public int DeleteFileHDOS(Form1.DiskFileEntry disk_file_entry)
+        {
+
+            var result = 0;
+            long
+                //diskItemp,
+                filei = 0; // file buffer index
+            var diskImage = disk_file_entry.DiskImageName;
+            var fileNameStr = disk_file_entry.FileName;
+            char[] fileNameB= new char[fileNameStr.Length];     // make a char copy of filename with ' ' = 0
+            for(var i = 0; i < fileNameStr.Length;i++)
+                if (fileNameStr[i] != ' ')
+                    fileNameB[i] = fileNameStr[i];
+                else
+                    fileNameB[i] = '\0';
+            
+            if (DiskImageActive != diskImage) // image mismatch
+                return result;
+            var obj = fileNameList.FirstOrDefault(x => x.fname == fileNameStr);
+            if (obj == null)
+            {
+                MessageBox.Show("File Not Found", fileNameStr, MessageBoxButtons.OK);
+                return result;
+            }
+            // Find DIRECT.SYS entry
+            var start = diskDirectStart;
+            var dirFind = 0;
+            byte grtStart = 0;
+            var cnt = 0;
+            while (dirFind == 0)
+            {
+                for (cnt = 0; cnt< 11; cnt++)
+                    if (buf[start + cnt] != fileNameB[cnt])
+                        break;
+                if (cnt == 11)
+                {
+                    dirFind = 1;
+                    buf[start] = 0xff;      // mark available
+                    grtStart = buf[start + 0x10];
+                }
+                else
+                {
+                    start += dirLen;
+                    if (buf[start+1] == dirLen)
+                    {
+                        var tt = buf[start + 4];
+                        var tt1 = buf[start + 5];
+                        start = (buf[start + 4] + buf[start + 5]*256)*256;
+                        if (start == 0)
+                            break;
+                    }
+                }
+            }
+
+            if (dirFind == 1)
+            {
+                var temp = buf[diskGrtStart];
+                buf[diskGrtStart] = grtStart ;
+                while (buf[ diskGrtStart+ grtStart]!=0)
+                    grtStart = buf[diskGrtStart + grtStart];
+                buf[diskGrtStart + grtStart] = temp;
+                result = 1;
+            }
+
+            
+
 
             return result;
         }
@@ -856,8 +951,11 @@ namespace HDOS
             {
                 for( j = 0;j < dirCnt; j++)         // Write blank directory entry 
                 {
-                    buf[bufPtr + j * dirLen] = 0xff;
-                    for (var i = 1; i < dirLen; i++)
+                    if(k < 2)
+                        buf[bufPtr + j * dirLen] = 0xff;        // empty DIR marker
+                    else 
+                        buf[bufPtr + j * dirLen] = 0xfe;
+                    for (var i = 1; i < dirLen; i++)            // zero fill entry
                         buf[bufPtr+ j*dirLen + i] = 0;
                 }
 
@@ -874,9 +972,13 @@ namespace HDOS
             byte directGroup = (byte)(directSector / sectorsCluster); // 54
             byte rgtGroup = (byte)(rgtSector / sectorsCluster); // 2           LoadBufLsMs(bufPtr -2, 0);
             bufPtr = directSector * 256;
-            LoadDirHdos("DIRECT  SYS", bufPtr , flag, directGroup, directGroup+dirSize/sectorsCluster, sectorsCluster, diskDate);
+            bufPtr = bufPtr + 512+dirLen * 18;    // put the three files where HDOS 2 is happy
+            LoadDirHdos("RGT     SYS", bufPtr , flag, rgtGroup, rgtGroup, 1, diskDate); 
             LoadDirHdos("GRT     SYS", bufPtr += dirLen, flag, grtGroup, grtGroup, 1, diskDate);
-            LoadDirHdos("RGT     SYS", bufPtr += dirLen, flag, rgtGroup, rgtGroup, 1, diskDate);
+            LoadDirHdos("DIRECT  SYS", bufPtr += dirLen, flag, directGroup, 
+                        directGroup+dirSize/sectorsCluster, sectorsCluster, diskDate);
+            buf[bufPtr+dirLen] = 0xfe;         // HDOS 2 Happy marker
+
 
             // Set up GRT.SYS
             //   disk is formatted to 'GL'

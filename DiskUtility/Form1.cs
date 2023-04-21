@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using HDOS;
+using static DiskUtility.Form1;
 
 namespace DiskUtility
 {
@@ -187,7 +188,7 @@ namespace DiskUtility
             //BtnAddCpm.Enabled = false;
             //BtnAddMsdos.Enabled = false;
             //BtnImdConvert.Enabled = false;
-            BtnDelete.Enabled = false;
+            //BtnDelete.Enabled = false;
             BtnView.Enabled = false;
         }
 
@@ -259,6 +260,68 @@ namespace DiskUtility
             makeDisk.unload( );
             Refresh();
             BtnFolder_initA();
+        }
+        //********************* Delete File ***********************
+        private void ButtonDelete(object sender, EventArgs e)
+        {
+            var files_deleted = 0;
+            var fileImage_deleted = 0;
+            var files_skipped = 0;
+            var diskTotal = 0;
+            string diskImage = "";
+
+            var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
+ 
+            var idx = listBoxFiles.SelectedIndex;
+            if (idx != -1)
+            {
+                for (var i = 0; i < listBoxFiles.SelectedItems.Count; i++)
+                {
+                    idx = listBoxFiles.SelectedIndices[i];
+                    foreach (DiskFileEntry entry in DiskFileList)
+                        if (entry.ListBox2Entry == idx)
+                        {
+                            if (entry.fileType == "HDOS")
+                            {
+                                if (diskImage != entry.DiskImageName)
+                                {
+                                    if (diskImage.Length > 0 && fileImage_deleted>0)     // image change, write last
+                                        WriteHdosImage(diskImage, getHdosFile);
+                                    diskImage = entry.DiskImageName;
+                                    fileImage_deleted = 0;
+                                    getHdosFile.ReadHdosDir(diskImage, ref diskTotal);
+                                }
+                                if (getHdosFile.DeleteFileHDOS(entry) > 0)
+                                {
+                                    files_deleted++;
+                                    fileImage_deleted++;
+                                }
+                            }
+                            else
+                                files_skipped++;
+                        }
+                }
+                if (diskImage.Length > 0 && fileImage_deleted > 0)     // image change, write last
+                    WriteHdosImage(diskImage, getHdosFile);
+                listBoxFiles.ClearSelected();
+            }
+
+            var message = string.Format("{0} file(s) deleted, {1} file(s) skipped", files_deleted, files_skipped);
+            MessageBox.Show(this, message, "Disk Image Utility HDOS Files Only");
+            BtnFileList_Click(sender, e);
+
+        }
+
+        //**************************** Write Hdos Image **********************
+        private void WriteHdosImage(string path, HDOSFile hFile)
+        {
+            FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
+            BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
+
+            fileOutBytes.Seek(0, SeekOrigin.Current);
+            fileOutBytes.Write(hFile.buf, 0, hFile.fileLen);
+            fileOutBytes.Close();
+            fsOut.Dispose();
         }
 
         //*************** File List ********************
@@ -443,7 +506,7 @@ namespace DiskUtility
 
 
                         if (File.Exists(diskFileName))
-                            if (MessageBox.Show(shortFileName+" exists, Overwrite it?", "File Exists",
+                            if (MessageBox.Show(diskFileName+" exists, Overwrite it?", "File Exists",
                                     MessageBoxButtons.YesNo) ==
                                 DialogResult.No)
                                 return;
@@ -881,7 +944,7 @@ namespace DiskUtility
                 foreach (var f in getHdosFile.fileNameList)
                 {
                     diskFileCnt++;
-                    diskUsed += f.fCluster;
+                    diskUsed += f.fsize;
                     var disk_file_entry = new DiskFileEntry();
                     disk_file_entry.DiskImageName = diskName;
                     disk_file_entry.FileName = f.fname;
@@ -1077,15 +1140,8 @@ namespace DiskUtility
 
         private int ExtractHdosFile(DiskFileEntry disk_file_entry)
         {
-            var result = 1; // dcp extracted file count to deal with CP/M file extract fail
-            /*
-            var disk_image_file = disk_file_entry.DiskImageName;
-            var file = File.OpenRead(disk_image_file);
-            var bin_file = new BinaryReader(file);
-            var buf = bin_file.ReadBytes(256);
-          */
-
-            // dcp Add CPM Extract
+            var result = 1; // dcp extracted file count to deal with file extract fail
+         
             var getHdosFile = new HDOSFile(); // create instance of CPMFile, then call function
             result = getHdosFile.ExtractFileHDOS(disk_file_entry);
 
@@ -1093,16 +1149,19 @@ namespace DiskUtility
             return result;
         }
 
+        private int DeleteHdosFile(DiskFileEntry disk_file_entry)
+        {
+            var result = 0; // dcp extracted file count to deal with file extract fail
 
+            var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
+            result = getHdosFile.DeleteFileHDOS(disk_file_entry);
+
+
+            return result;
+        }
         private int ExtractCpmFile(DiskFileEntry disk_file_entry)
         {
-            var result = 1; // dcp extracted file count to deal with CP/M file extract fail
-            /*
-            var disk_image_file = disk_file_entry.DiskImageName;
-            var file = File.OpenRead(disk_image_file);
-            var bin_file = new BinaryReader(file);
-            var buf = bin_file.ReadBytes(256);
-          */
+            var result = 0; // dcp extracted file count to deal with CP/M file extract fail
 
                 // dcp Add CPM Extract
                 var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
@@ -1113,13 +1172,8 @@ namespace DiskUtility
         }
         private int ExtractDosFile(DiskFileEntry disk_file_entry)
         {
-            var result = 0; // dcp extracted file count to deal with CP/M file extract fail
-            /*
-            var disk_image_file = disk_file_entry.DiskImageName;
-            var file = File.OpenRead(disk_image_file);
-            var bin_file = new BinaryReader(file);
-            var buf = bin_file.ReadBytes(256);
-          */
+            var result = 0; // dcp extracted file count to deal with file extract fail
+
             if (!disk_file_entry.fFlags.Contains("Directory"))
             {
                 var getDosFile = new MsdosFile(); // create instance of CPMFile, then call function
@@ -1148,7 +1202,6 @@ namespace DiskUtility
                     foreach (DiskFileEntry entry in DiskFileList)
                         if (entry.ListBox2Entry == idx)
                         {
-                            // dcp changed Extract file to return 1 if successful
                             if (entry.DiskImageName.Contains(".IMD"))
                                 //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
                                 files_extracted += getCpmFile.ExtractFileCPMImd(entry);

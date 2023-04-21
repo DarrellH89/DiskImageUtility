@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using CPM;
 using System.IO;
 using System.Linq;
@@ -263,6 +264,7 @@ namespace DiskUtility
             // Get Files to add to image
             var startDir = tbFolder.Text;   // check if a working folder is selected
             var fileCnt = 0;
+            var filesSkipped = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -274,7 +276,10 @@ namespace DiskUtility
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += getHdos.InsertFileHdos(filename);
+                    if (getHdos.InsertFileHdos(filename) == 1)
+                        fileCnt++;
+                    else
+                        filesSkipped++;
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -286,6 +291,8 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            MessageBox.Show(this, message, "Insert HDOS Files");
         }
 
         /******************** File Create File for CP/M *******************************/
@@ -389,6 +396,7 @@ namespace DiskUtility
             // Get Files to add to image
             var startDir = tbFolder.Text;   // check if a working folder is selected
             var fileCnt = 0;
+            var filesSkipped = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -400,7 +408,10 @@ namespace DiskUtility
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += getCpm.InsertFileCpm(filename);
+                    if (getCpm.InsertFileCpm(filename) == 1)
+                        fileCnt++;
+                    else 
+                        filesSkipped++;
             if (fileCnt > 0) // Added a file or two
                 {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -412,6 +423,8 @@ namespace DiskUtility
                 fsOut.Dispose();
                 }
             buttonFolder_Init(start);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            MessageBox.Show(this, message, "Insert CP/M Files");
         }
         /******************** File Create File for MS-DOS *******************************/
         /* Input disk type - first value in file type data array
@@ -517,6 +530,7 @@ namespace DiskUtility
             // Get Files to add to image
             var startDir = tbFolder.Text;   // check if a working folder is selected
             var fileCnt = 0;
+            var filesSkipped = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -528,7 +542,10 @@ namespace DiskUtility
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += getDos.InsertFileDos(filename);
+                    if( getDos.InsertFileDos(filename) == 1)
+                        fileCnt++;
+                    else 
+                        filesSkipped++;
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -540,6 +557,8 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            MessageBox.Show(this, message, "Insert MS-DOS Files");
         }
 
 

@@ -66,12 +66,14 @@ class MsdosFile
         // 7.# Tracks, 8. # heads, 9 FAT start, 10 # sectors in FAT, 11 Max FAT, 12 Total Sectors, 13 sectors per cluster, IMD Value
         public int[,] DiskType =
         {
-            // 0    1       2     3     4    5  6      7   8  9    10   11    12    13 14
-            {0xfd, 0x400, 0xA00,  0xE00, 1, 9, 0x200, 40, 2, 0x200, 2, 360, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
-            {0xff, 0x400, 0x600,  0xE00, 1, 8, 0x200, 40, 2, 0x200, 1, 320, 0x280, 2, 4}, // MSDOS 40trk, 320k
-            {0xf9, 0x400, 0xA00,  0xE00, 1, 9, 0x200, 80, 2, 0x200, 2, 720, 0x5A0, 2, 5}, // MSDOS 80trk, 720k
-            {0xfe, 0x400, 0x1400, 0x1800, 1, 8, 0x400, 77, 2, 0x400, 2, 1232, 0x4d0, 1, 3},   // MSDOS 77 trk, 1232k, 8"   
-            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880 , 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 5"   
+            // 0    1       2     3       4   5  6      7   8   9    10   11    12   13 14
+            {0xff, 0x400, 0x600,  0xE00,  1,  8, 0x200, 40, 2, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 320k
+            {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 160k
+            {0xfe, 0x400, 0x1400, 0x1800, 1,  8, 0x400, 77, 2, 0x400, 2, 1232, 0x4d0, 1, 3},   // MSDOS 77 trk, 1232k, 8"            
+            {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  360, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
+            {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  720, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
+            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
+  
         };
 
 
@@ -397,7 +399,9 @@ class MsdosFile
                 bufPtr = 0;
 
             for (ctr = 0; ctr < DiskType.GetLength(0); ctr++) // search DiskType array for values
-                if (diskType == DiskType[ctr, 0] || ctr == DiskType.GetLength(0) - 1)
+                if (diskType == DiskType[ctr, 0] && (diskTotal == DiskType[ctr,12]* DiskType[ctr, 6] ||
+                                                     diskTotal == (DiskType[ctr, 12] * DiskType[ctr, 6])+32))
+                    //|| ctr == DiskType.GetLength(0) - 1)
                 {
                     // if ctr equals last value, use as default
                     albSize = DiskType[ctr, 1]; // ALB Size
@@ -420,7 +424,7 @@ class MsdosFile
 
             // error if no match found
             if (ctr == DiskType.GetLength(0))
-                MessageBox.Show("Error - MS-DOS Disk Type not found in File", "Error", MessageBoxButtons.OK);
+                MessageBox.Show("Error - MS-DOS Disk Type not found in File", diskFileName, MessageBoxButtons.OK);
             else
                 result = 1;
             if (result == 1) // done error checking, read directory

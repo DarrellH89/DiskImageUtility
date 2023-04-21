@@ -165,6 +165,7 @@ namespace DiskUtility
             this.BtnDelete.TabIndex = 9;
             this.BtnDelete.Text = "Delete";
             this.BtnDelete.UseVisualStyleBackColor = true;
+            this.BtnDelete.Click += new System.EventHandler(this.ButtonDelete);
             // 
             // BtnView
             // 
