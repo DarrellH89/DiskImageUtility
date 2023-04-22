@@ -801,7 +801,7 @@ namespace HDOS
                 {
                     var rBptr = 0; // read buffer ptr
                     var wBptr = 0; // write buffer ptr
-                    var buffSize = obj.fsize;
+                    var buffSize = obj.fsize*256;
                     var last = obj.lGroup;
                     var numSects = diskSectorPerGroup;
                     var wBuff = new byte[buffSize]; //   write buffer + 256 removed
