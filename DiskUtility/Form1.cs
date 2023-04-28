@@ -79,7 +79,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.2a Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.2b Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -944,7 +944,7 @@ namespace DiskUtility
                 foreach (var f in getHdosFile.fileNameList)
                 {
                     diskFileCnt++;
-                    diskUsed += f.fsize;
+                    diskUsed += f.fCluster;
                     var disk_file_entry = new DiskFileEntry();
                     disk_file_entry.DiskImageName = diskName;
                     disk_file_entry.FileName = f.fname;

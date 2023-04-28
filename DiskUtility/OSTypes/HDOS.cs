@@ -439,6 +439,8 @@ namespace HDOS
             var fnameStr = "";
             while (dirBufPtr != 0) // Read each sector
             {
+                if (dirBufPtr > fileLen)    // ERROR CHECK
+                    break;
                 t1 = buf[dirBufPtr];
 
                 if (buf[dirBufPtr] < 0xfe) // valid directory entry
