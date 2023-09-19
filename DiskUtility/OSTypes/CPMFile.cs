@@ -72,7 +72,7 @@ namespace CPM
         // 6.Sectors per Track, 7.Sector Size, 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
         public int[,] DiskType =
         {
-            // 0    1       2     3     4    5  6   7       8  9
+            // 0    1       2     3     4    5  6   7       8  9 10
             {0xff, 0x800, 0x4800, 2, 0x2000, 6, 18, 0x200, 80, 2, 10}, // 0 1.44 MB Small Z-80 
             {0x6f, 0x800, 0x2800, 2, 0x2000, 3, 5, 0x400, 80, 2, 4}, //   1 800k H37 96tpi ED DS
             {0x6b, 0x800, 0x2000, 2, 0x2000, 3, 16, 0x100, 80, 2, 12}, // 2 640k H37 96tpi DD DS

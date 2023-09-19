@@ -895,7 +895,7 @@ namespace DiskUtility
                     disk_file_entry.UserArea = f.userArea;
                     disk_file_entry.ListBox2Entry = listBoxFiles.Items.Count;
                     disk_file_entry.fFlags = f.flags;
-                    disk_file_entry.fileType = "H37";
+                    disk_file_entry.fileType = "CPM";
                     DiskFileList.Add(disk_file_entry);
                     var tempStr = disk_file_entry.FileName.Substring(2, 11);
                     tempStr = tempStr.Insert(8, " ");
