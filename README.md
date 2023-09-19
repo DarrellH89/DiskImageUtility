@@ -8,21 +8,21 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
 
 # File Conversion Notes
 
-1.	Dunfield IMD files image skew matches physical disk. For an 800k disk, the first sector is 3.
-	_ H37 has skew of 3, sector 1 is first but in same order as Dunfield IMD
-	_ To convert H37 to IMG
-	_ Convert to IMD
-	  _ Then convert to IMG
-	_ MS-DOS IMD disk has skew = 1
-	_ IMG files are sequential order, skew = 1
-	_ IMG conversion to IMD keeps skew = 1
-	_ IMD conversion to IMG changes skew to 1
+1. Dunfield IMD files image skew matches physical disk. For an 800k disk, the first sector is 3.
+   _ H37 has skew of 3, sector 1 is first but in same order as Dunfield IMD
+   _ To convert H37 to IMG
+     _ Convert to IMD
+     _ Then convert to IMG
+   _ MS-DOS IMD disk has skew = 1
+   _ IMG files are sequential order, skew = 1
+   _ IMG conversion to IMD keeps skew = 1
+   _ IMD conversion to IMG changes skew to 1
 
 # Change Log
--	1.1e
-__	Added code for Livingston Logic Labs for H8D
-__	Added IMG to IMD conversion
-__	MessageBox Title Update. Changed Disk Utility to Disk Image Utility
+- 1.1e
+  _ Added code for Livingston Logic Labs for H8D
+  _ Added IMG to IMD conversion
+  _ MessageBox Title Update. Changed Disk Utility to Disk Image Utility
 -	1.1f
 __	Corrected program exception error when adding files
 - 1.1g
