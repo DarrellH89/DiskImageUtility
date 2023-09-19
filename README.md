@@ -6,10 +6,10 @@ If you want to copy files between images you must first extract the file and the
 
 Disk Image Utility can also create blank disk images in several CP/M, HDOS, and MS-DOS formats which you can use in a Flash Floppy or HxC flashed Gotek. Disk Image Utility also supports adding files to these images. File deletion is currently only supoorted in HDOS.
 
-# File Conversion Notes
+## File Conversion Notes
 
-1. Dunfield IMD files image skew matches physical disk. For an 800k disk, the first sector is 3.
-   _ H37 has skew of 3, sector 1 is first but in same order as Dunfield IMD
+* Dunfield IMD files image skew matches physical disk. For an 800k disk, the first sector is 3.
+  ** H37 has skew of 3, sector 1 is first but in same order as Dunfield IMD
    _ To convert H37 to IMG
      _ Convert to IMD
      _ Then convert to IMG
