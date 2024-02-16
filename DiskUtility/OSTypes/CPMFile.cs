@@ -70,6 +70,8 @@ namespace CPM
         */
         // 0.Disk type, 1.Allocation block size, 2.Directory start, 3.Allocation block byte size, 4.dir size, 5.interleave,
         // 6.Sectors per Track, 7.Sector Size, 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
+        // MAKE SURE TO UPDATE filecreate() calls in Form5 if the table length changes
+
         public int[,] DiskType =
         {
             // 0    1       2     3     4    5  6   7       8  9 10

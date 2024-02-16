@@ -115,33 +115,33 @@ namespace DiskUtility
 
         private void ButtonH8d100_Click(object sender, EventArgs e)
             {
-            fileCreate(8, "");
+            fileCreate(9, "");
             }
 
         private void Buttonh37_806f_Click(object sender, EventArgs e)
             {
-            fileCreate(1, "");
+            fileCreate(2, "");
             }
 
         private void ButtonH37_806b_Click(object sender, EventArgs e)
             {
-            fileCreate(2, "");
+            fileCreate(3, "");
             }
         private void ButtonH37_4067_Click(object sender, EventArgs e)
         {
-            fileCreate(3, "");
+            fileCreate(4, "");
         }
         private void ButtonH37_4060_Click(object sender, EventArgs e)
         {
-            fileCreate(7, "");
+            fileCreate(8, "");
         }
         private void ButtonH37_4063_Click(object sender, EventArgs e)
         {
-            fileCreate(6, "");
+            fileCreate(7, "");
         }
         private void ButtonZ100_cpm_Click(object sender, EventArgs e)
         {
-            fileCreate(4, "");
+            fileCreate(5, "");
         }
 
         private void smallz80_Click(object sender, EventArgs e)
