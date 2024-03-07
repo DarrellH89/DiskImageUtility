@@ -38,3 +38,9 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
   * Added support for .H37 files with disk information at the end of the file name.
 * 1.2b 
   * Fixed bug in CP/M extract caused by added support for .H37 files.
+* 1.2c
+  *Added support for RC2014 CP/M format
+* 1.2c1
+  *Mostly fixed issue with CP/M disk definition table caused by 1.2c
+* 1.2c2
+  * Finally fixed CP/M disk definition table caused by 1.2c (mismatch on disk creation button)
