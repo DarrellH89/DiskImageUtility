@@ -970,8 +970,18 @@ namespace CPM
                     result = 0;
                     return result;
                 }
-
-            var file_out = File.Create(file_name);
+            
+            FileStream file_out;
+            try
+            {
+                file_out = File.Create(file_name);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(file_name , "File Access Error", MessageBoxButtons.OK);
+                result = 0;
+                return result;
+            }
             var bin_out = new BinaryWriter(file_out);
 
             var skewMap = BuildSkew(intLv, spt, sptStart);
@@ -982,22 +992,24 @@ namespace CPM
             {
                 var rBptr = 0; // read buffer ptr
                 var wBptr = 0; // write buffer ptr
-                var wBuff = new byte[obj.fsize + 256]; //   write buffer
+                var wSize = obj.fsize + 256;
+                var wBuff = new byte[wSize]; //   write buffer
                 var fileType = buf[rBptr];
 
                 foreach (var f in obj.fcbList)
                 {
                     var fcbNum = f.fcbnum;      // number of 128 byte records to get
-                    for (var i = 0; i < 16; i++)
+                    for (var i = 0; i < 16; i++)    // up to 16 FCBs per directory entry
                         if (f.fcb[i] > 0) // allocation block to get
                         {
-
+                            var temp1 = f.fcb[i];
                             for (var k = 0; k < albSize / sectorSize; k++) // read the sectors in the allocation block
                             {
                                 //GetALB(ref buff, 0, bin_file, f.fcb[i], dirStart, allocBlock, sectorSize, spt, skewMap);
                                 var sectOffset = f.fcb[i] * albSize/sectorSize+k;
                                 var tracks = (dirStart + sectOffset) / (spt * sectorSize);
                                 var baseSect = (dirStart + sectOffset - tracks * (spt * sectorSize)) / sectorSize;
+                                var temp2 = skewMap[sectOffset % spt];
                                 rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
                                 // + (sectOffset % spt) * sectorSize;
                                 var j = 0;
@@ -1008,10 +1020,34 @@ namespace CPM
                             }
                         }
                 }
-                if(fileType == 0xc3)        // get rid of EOF marker
-                    while (buf[--wBptr] == 0x1a)
-                        ;
-                bin_out.Write(wBuff, 0, wBptr);
+                // test for binary file
+                // look for 0x1A to indicate end of text file
+                // Adjust wBptr to end of file
+                var chk = 0;
+                var tSize = wBptr;
+                if (tSize > 100)
+                    tSize = 100;
+                for (var i = 0; i< tSize; i++)
+                {
+                    if (wBuff[i] < 0x80)
+                       chk++;
+                }
+
+                var bptr = 0;
+                if (chk > 60)
+                {
+
+                    for (; bptr< wSize; bptr++)   // search for EOF marker
+                    {
+                        if (wBuff[bptr] == 0x1a)
+                            break;
+                    }
+
+                    if (bptr < wBptr)
+                        wBptr = bptr+1;
+                }
+
+                bin_out.Write(wBuff, 0, wBptr);     // write file buffer to disk
             }
 
             bin_out.Close();
