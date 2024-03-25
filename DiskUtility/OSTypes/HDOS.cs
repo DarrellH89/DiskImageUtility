@@ -3,6 +3,7 @@ using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,6 +13,7 @@ using System.Text;
 using System.Windows.Forms;
 using static DiskUtility.Form1;
 using IDLDESC = System.Runtime.InteropServices.IDLDESC;
+
 
 namespace HDOS
 {
@@ -28,6 +30,8 @@ namespace HDOS
 
         ///********** data values for reading disks       */
         private const int bufferSize = 80 * 2 * 16 * 256 + 1024; // Tracks * Head * SPT * Sector Size + extra
+
+        private const int diskLabelLen = 60;
 
         public byte[] buf = new byte[bufferSize];
 
@@ -860,6 +864,15 @@ namespace HDOS
                 volFlags = 0,
                 heads = 1;
             string diskLabel = "Micronics Technology HDOS 2.0 2023";
+            //MessageBox(diskLabel, "Change Disk Label?");
+            var prompt = "Enter Desired Disk Label";
+            var title = "";
+            var label = diskLabel;
+            if (InputBox(prompt, title, ref label) == DialogResult.OK)
+                if (label.Length > 60)
+                    diskLabel = label.Substring(0, diskLabelLen);
+                 else
+                    diskLabel = label; 
 
             for (var i = 0; i < diskTotal; i++) // Format disk
             {

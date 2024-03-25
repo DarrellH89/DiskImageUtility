@@ -36,14 +36,14 @@
             this.btnH37_640 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.btnH37_360 = new System.Windows.Forms.Button();
+            this.btnH37_400 = new System.Windows.Forms.Button();
             this.btnSz80_1440 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
+            this.btnDOS_360 = new System.Windows.Forms.Button();
+            this.btnDOS_720 = new System.Windows.Forms.Button();
+            this.btnH37_100 = new System.Windows.Forms.Button();
+            this.btnDOS_1440 = new System.Windows.Forms.Button();
+            this.btnZ100_320 = new System.Windows.Forms.Button();
+            this.btnH37_320 = new System.Windows.Forms.Button();
             this.btnH80_640 = new System.Windows.Forms.Button();
             this.btnH40_400 = new System.Windows.Forms.Button();
             this.btnH40_100 = new System.Windows.Forms.Button();
@@ -128,15 +128,15 @@
             this.label2.TabIndex = 8;
             this.label2.Text = "Click below to create an empty file";
             // 
-            // btnH37_360
+            // btnH37_400
             // 
-            this.btnH37_360.Location = new System.Drawing.Point(440, 233);
-            this.btnH37_360.Name = "btnH37_360";
-            this.btnH37_360.Size = new System.Drawing.Size(130, 21);
-            this.btnH37_360.TabIndex = 10;
-            this.btnH37_360.Text = "H37 40 trk 400k";
-            this.btnH37_360.UseVisualStyleBackColor = true;
-            this.btnH37_360.Click += new System.EventHandler(this.ButtonH37_4067_Click);
+            this.btnH37_400.Location = new System.Drawing.Point(440, 233);
+            this.btnH37_400.Name = "btnH37_400";
+            this.btnH37_400.Size = new System.Drawing.Size(130, 21);
+            this.btnH37_400.TabIndex = 10;
+            this.btnH37_400.Text = "H37 40 trk 400k";
+            this.btnH37_400.UseVisualStyleBackColor = true;
+            this.btnH37_400.Click += new System.EventHandler(this.ButtonH37_4067_Click);
             // 
             // btnSz80_1440
             // 
@@ -148,65 +148,65 @@
             this.btnSz80_1440.UseVisualStyleBackColor = true;
             this.btnSz80_1440.Click += new System.EventHandler(this.smallz80_Click);
             // 
-            // button1
+            // btnDOS_360
             // 
-            this.button1.Location = new System.Drawing.Point(440, 384);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(130, 21);
-            this.button1.TabIndex = 12;
-            this.button1.Text = "MS-DOS 360k";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.ButtonDos_360_Click);
+            this.btnDOS_360.Location = new System.Drawing.Point(440, 384);
+            this.btnDOS_360.Name = "btnDOS_360";
+            this.btnDOS_360.Size = new System.Drawing.Size(130, 21);
+            this.btnDOS_360.TabIndex = 12;
+            this.btnDOS_360.Text = "MS-DOS 360k";
+            this.btnDOS_360.UseVisualStyleBackColor = true;
+            this.btnDOS_360.Click += new System.EventHandler(this.ButtonDos_360_Click);
             // 
-            // button2
+            // btnDOS_720
             // 
-            this.button2.Location = new System.Drawing.Point(440, 411);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(130, 21);
-            this.button2.TabIndex = 13;
-            this.button2.Text = "MS-DOS 720k";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.ButtonDos_720_Click);
+            this.btnDOS_720.Location = new System.Drawing.Point(440, 411);
+            this.btnDOS_720.Name = "btnDOS_720";
+            this.btnDOS_720.Size = new System.Drawing.Size(130, 21);
+            this.btnDOS_720.TabIndex = 13;
+            this.btnDOS_720.Text = "MS-DOS 720k";
+            this.btnDOS_720.UseVisualStyleBackColor = true;
+            this.btnDOS_720.Click += new System.EventHandler(this.ButtonDos_720_Click);
             // 
-            // button3
+            // btnH37_100
             // 
-            this.button3.Location = new System.Drawing.Point(440, 291);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(130, 21);
-            this.button3.TabIndex = 14;
-            this.button3.Text = "H37 40 trk 100k";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.ButtonH37_4060_Click);
+            this.btnH37_100.Location = new System.Drawing.Point(440, 291);
+            this.btnH37_100.Name = "btnH37_100";
+            this.btnH37_100.Size = new System.Drawing.Size(130, 21);
+            this.btnH37_100.TabIndex = 14;
+            this.btnH37_100.Text = "H37 40 trk 100k";
+            this.btnH37_100.UseVisualStyleBackColor = true;
+            this.btnH37_100.Click += new System.EventHandler(this.ButtonH37_4060_Click);
             // 
-            // button4
+            // btnDOS_1440
             // 
-            this.button4.Location = new System.Drawing.Point(440, 438);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(130, 21);
-            this.button4.TabIndex = 15;
-            this.button4.Text = "MS-DOS 1440k";
-            this.button4.UseVisualStyleBackColor = true;
-            this.button4.Click += new System.EventHandler(this.ButtonDos_1440_Click);
+            this.btnDOS_1440.Location = new System.Drawing.Point(440, 438);
+            this.btnDOS_1440.Name = "btnDOS_1440";
+            this.btnDOS_1440.Size = new System.Drawing.Size(130, 21);
+            this.btnDOS_1440.TabIndex = 15;
+            this.btnDOS_1440.Text = "MS-DOS 1440k";
+            this.btnDOS_1440.UseVisualStyleBackColor = true;
+            this.btnDOS_1440.Click += new System.EventHandler(this.ButtonDos_1440_Click);
             // 
-            // button5
+            // btnZ100_320
             // 
-            this.button5.Location = new System.Drawing.Point(440, 345);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(130, 21);
-            this.button5.TabIndex = 16;
-            this.button5.Text = "Z-100 320k";
-            this.button5.UseVisualStyleBackColor = true;
-            this.button5.Click += new System.EventHandler(this.ButtonZ100_cpm_Click);
+            this.btnZ100_320.Location = new System.Drawing.Point(440, 345);
+            this.btnZ100_320.Name = "btnZ100_320";
+            this.btnZ100_320.Size = new System.Drawing.Size(130, 21);
+            this.btnZ100_320.TabIndex = 16;
+            this.btnZ100_320.Text = "Z-100 320k";
+            this.btnZ100_320.UseVisualStyleBackColor = true;
+            this.btnZ100_320.Click += new System.EventHandler(this.ButtonZ100_cpm_Click);
             // 
-            // button6
+            // btnH37_320
             // 
-            this.button6.Location = new System.Drawing.Point(440, 260);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(130, 21);
-            this.button6.TabIndex = 17;
-            this.button6.Text = "H37 40 trk 320k";
-            this.button6.UseVisualStyleBackColor = true;
-            this.button6.Click += new System.EventHandler(this.ButtonH37_4063_Click);
+            this.btnH37_320.Location = new System.Drawing.Point(440, 260);
+            this.btnH37_320.Name = "btnH37_320";
+            this.btnH37_320.Size = new System.Drawing.Size(130, 21);
+            this.btnH37_320.TabIndex = 17;
+            this.btnH37_320.Text = "H37 40 trk 320k";
+            this.btnH37_320.UseVisualStyleBackColor = true;
+            this.btnH37_320.Click += new System.EventHandler(this.ButtonH37_4063_Click);
             // 
             // btnH80_640
             // 
@@ -246,14 +246,14 @@
             this.Controls.Add(this.btnH40_100);
             this.Controls.Add(this.btnH40_400);
             this.Controls.Add(this.btnH80_640);
-            this.Controls.Add(this.button6);
-            this.Controls.Add(this.button5);
-            this.Controls.Add(this.button4);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnH37_320);
+            this.Controls.Add(this.btnZ100_320);
+            this.Controls.Add(this.btnDOS_1440);
+            this.Controls.Add(this.btnH37_100);
+            this.Controls.Add(this.btnDOS_720);
+            this.Controls.Add(this.btnDOS_360);
             this.Controls.Add(this.btnSz80_1440);
-            this.Controls.Add(this.btnH37_360);
+            this.Controls.Add(this.btnH37_400);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnH37_640);
@@ -279,14 +279,14 @@
         private System.Windows.Forms.Button btnH37_640;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button btnH37_360;
+        private System.Windows.Forms.Button btnH37_400;
         private System.Windows.Forms.Button btnSz80_1440;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.Button button4;
-        private System.Windows.Forms.Button button5;
-        private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button btnDOS_360;
+        private System.Windows.Forms.Button btnDOS_720;
+        private System.Windows.Forms.Button btnH37_100;
+        private System.Windows.Forms.Button btnDOS_1440;
+        private System.Windows.Forms.Button btnZ100_320;
+        private System.Windows.Forms.Button btnH37_320;
         private System.Windows.Forms.Button btnH80_640;
         private System.Windows.Forms.Button btnH40_400;
         private System.Windows.Forms.Button btnH40_100;

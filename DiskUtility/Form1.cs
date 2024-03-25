@@ -79,7 +79,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.2c.3 Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.2d Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -1381,7 +1381,38 @@ namespace DiskUtility
             return (false);
         }
 
-
+    /********************************** Input Dialog Box *********************************/
+    public static DialogResult InputBox(string title, string promptText, ref string value)
+    {
+        Form form = new Form();
+        Label label = new Label();
+        TextBox textBox = new TextBox();
+        Button buttonOk = new Button();
+        //Button buttonCancel = new Button();
+        form.Text = title;
+        label.Text = promptText; //promptText;
+        textBox.Text = value;
+        buttonOk.Text = "OK";
+        //buttonCancel.Text = "Cancel";
+        buttonOk.DialogResult = DialogResult.OK;
+        //buttonCancel.DialogResult = DialogResult.Cancel;
+        label.SetBounds(36, 36, 300, 13);
+        textBox.SetBounds(36, 40, 200, 30);
+        buttonOk.SetBounds(300, 40, 50, 20);
+        //buttonCancel.SetBounds(400, 160, 160, 60);
+        label.AutoSize = true;
+        form.ClientSize = new Size(400, 100);
+        form.FormBorderStyle = FormBorderStyle.FixedDialog;
+        form.StartPosition = FormStartPosition.CenterScreen;
+        form.MinimizeBox = false;
+        form.MaximizeBox = false;
+        form.Controls.AddRange(new Control[] { label, textBox, buttonOk }); // button cancel
+        form.AcceptButton = buttonOk;
+        //form.CancelButton = buttonCancel;
+        DialogResult dialogResult = form.ShowDialog();
+        value = textBox.Text;
+        return dialogResult;
+    }
     }
 
 }

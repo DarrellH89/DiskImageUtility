@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Eventing.Reader;
+using System.Drawing;
 using CPM;
 using System.IO;
 using System.Linq;
@@ -41,6 +42,7 @@ namespace DiskUtility
         private void buttonFolder_Init(char fileStart) // dcp modified code to read files store in last used directory. initA is used both on startup and when Folder Button is clicked.
             {
             listBox1.Items.Clear(); // clear file list
+            DisableButtons(fileStart);
             // set file extension types to scan directory
             string[] file_list = new string[1];
             if(fileStart == 'C' || fileStart == 'H')                    // CP/M
@@ -113,6 +115,46 @@ namespace DiskUtility
 
             }
 
+        private void DisableButtons(char dos)
+        {
+            switch (dos)
+            {
+                case 'C':
+                    btnDOS_360.Enabled = false;
+                    btnDOS_720.Enabled = false;
+                    btnDOS_1440.Enabled = false;
+                    btnH80_640.Enabled = false;
+                    btnH40_400.Enabled = false;
+                    btnH40_100.Enabled = false;
+                    break;
+                case 'H':
+                    btnH8d100.Enabled = false;
+                    btnH37_800.Enabled= false;
+                    btnH37_640.Enabled = false;
+                    btnH37_400.Enabled= false;
+                    btnH37_320.Enabled= false;
+                    btnH37_100.Enabled= false;
+                    btnSz80_1440.Enabled= false;
+                    btnZ100_320.Enabled= false;
+                    btnDOS_360.Enabled = false;
+                    btnDOS_720.Enabled= false;
+                    btnDOS_1440.Enabled = false;
+                    break;
+                case 'D':
+                    btnH8d100.Enabled = false;
+                    btnH37_800.Enabled = false;
+                    btnH37_640.Enabled = false;
+                    btnH37_400.Enabled = false;
+                    btnH37_320.Enabled = false;
+                    btnH37_100.Enabled = false;
+                    btnSz80_1440.Enabled = false;
+                    btnZ100_320.Enabled = false;
+                    btnH80_640.Enabled = false;
+                    btnH40_400.Enabled = false;
+                    btnH40_100.Enabled = false;
+                    break;
+            }
+        }
         private void ButtonH8d100_Click(object sender, EventArgs e)
             {
             fileCreate(9, "");
@@ -560,6 +602,8 @@ namespace DiskUtility
             var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
             MessageBox.Show(this, message, "Insert MS-DOS Files");
         }
+
+
 
 
 
