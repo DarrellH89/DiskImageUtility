@@ -1023,29 +1023,22 @@ namespace CPM
                 // test for binary file
                 // look for 0x1A to indicate end of text file
                 // Adjust wBptr to end of file
+                // count the number of ^Z in the last 200 bytes of the file
+                // if we find ^z^z then assume its a text file and adjust wBptr to the first ^z in the string
                 var chk = 0;
                 var tSize = wBptr;
-                if (tSize > 100)
-                    tSize = 100;
-                for (var i = 0; i< tSize; i++)
+
+                for (; tSize< wBptr-200; tSize--)
                 {
-                    if (wBuff[i] < 0x80)
-                       chk++;
+                    if (wBuff[tSize] == 0x1a && wBuff[tSize-1] == 0x1a)
+                       chk = 1;
+                    if (chk == 1 && (wBuff[tSize - 1] != 0x1a))
+                        break;
                 }
 
-                var bptr = 0;
-                if (chk > 60)
-                {
 
-                    for (; bptr< wSize; bptr++)   // search for EOF marker
-                    {
-                        if (wBuff[bptr] == 0x1a)
-                            break;
-                    }
-
-                    if (bptr < wBptr)
-                        wBptr = bptr+1;
-                }
+                if (chk == 1)
+                    wBptr = tSize;
 
                 bin_out.Write(wBuff, 0, wBptr);     // write file buffer to disk
             }
