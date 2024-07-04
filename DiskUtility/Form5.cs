@@ -216,6 +216,14 @@ namespace DiskUtility
         {
             fileCreateHdos(3, "");
         }
+
+        private void btnRC2014_720_Click(object sender, EventArgs e)
+        {
+
+        }
+        /******************* Lit Box 1 Double Click ********************/
+        /* opens selected disk image file to add files */
+
         private void listBox1_DoubleClick(object sender, EventArgs e)
         {
             string path = "";
@@ -315,6 +323,7 @@ namespace DiskUtility
             openFileDialog1.RestoreDirectory = true;
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
+            openFileDialog1.FileName = "";
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
@@ -602,6 +611,7 @@ namespace DiskUtility
             var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
             MessageBox.Show(this, message, "Insert MS-DOS Files");
         }
+
 
 
 

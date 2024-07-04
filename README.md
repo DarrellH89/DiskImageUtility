@@ -44,3 +44,12 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
   *Mostly fixed issue with CP/M disk definition table caused by 1.2c
 * 1.2c2
   * Finally fixed CP/M disk definition table caused by 1.2c (mismatch on disk creation button)
+* 1.2.d
+  * Added ability to change disk label when creating HDOS disk image
+  * Disabled buttons on Image creation page not related to current DOS selection
+* 1.2d1
+  * Fixed ^Z detection for text files truncating binary files
+* 1.2e
+  * Added on/off button for ^Z feature
+
+

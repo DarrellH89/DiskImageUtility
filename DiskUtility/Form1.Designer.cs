@@ -49,6 +49,7 @@ namespace DiskUtility
             this.labelFolder = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.BtnAddHdos = new System.Windows.Forms.Button();
+            this.btnOption = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -244,11 +245,22 @@ namespace DiskUtility
             this.BtnAddHdos.UseVisualStyleBackColor = true;
             this.BtnAddHdos.Click += new System.EventHandler(this.buttonCreateHdos_click);
             // 
+            // btnOption
+            // 
+            this.btnOption.Location = new System.Drawing.Point(22, 595);
+            this.btnOption.Name = "btnOption";
+            this.btnOption.Size = new System.Drawing.Size(85, 22);
+            this.btnOption.TabIndex = 22;
+            this.btnOption.Text = "Options";
+            this.btnOption.UseVisualStyleBackColor = true;
+            this.btnOption.Click += new System.EventHandler(this.btnOption_click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(972, 712);
+            this.Controls.Add(this.btnOption);
             this.Controls.Add(this.BtnAddHdos);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.labelFolder);
@@ -268,6 +280,7 @@ namespace DiskUtility
             this.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
             this.Name = "Form1";
             this.Text = "Disk Image Utility 2021 by Darrell Pelan";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -299,6 +312,7 @@ namespace DiskUtility
         private System.Windows.Forms.Label labelFolder;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button BtnAddHdos;
+        private System.Windows.Forms.Button btnOption;
     }
 }
 

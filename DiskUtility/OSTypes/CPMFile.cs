@@ -612,6 +612,7 @@ namespace CPM
                                 break; // compare filename to filename in directory
                         if (fcPtr == 12)
                         {
+                            var t = fn.ToString();
                             MessageBox.Show("File already in Directory. Skipping", fn.ToString(), MessageBoxButtons.OK);
                             return 0;
                         }
@@ -944,7 +945,7 @@ namespace CPM
         // ************** Extract File CP/M  *********************
         // inputs: path and filename, disk entry structure
         // output: requested file
-        public int ExtractFileCPM(Form1.DiskFileEntry disk_file_entry)
+        public int ExtractFileCPM(Form1.DiskFileEntry disk_file_entry, ref int txtFile)
         {
             var result = 1; // assume success
             var maxBuffSize = 0x2000; // largest allocation block size
@@ -1027,18 +1028,26 @@ namespace CPM
                 // if we find ^z^z then assume its a text file and adjust wBptr to the first ^z in the string
                 var chk = 0;
                 var tSize = wBptr;
-
-                for (; tSize< wBptr-200; tSize--)
+                var endChk = wBptr - 200;
+                if (Form1.options.Contains("T"))
                 {
-                    if (wBuff[tSize] == 0x1a && wBuff[tSize-1] == 0x1a)
-                       chk = 1;
-                    if (chk == 1 && (wBuff[tSize - 1] != 0x1a))
-                        break;
+                    if (!(ext == "COM" || ext == "BIN"))
+                    {
+                        for (; tSize > wBptr - 2048; tSize--)
+                        {
+                            if (wBuff[tSize] == 0x1a ) //&& wBuff[tSize - 1] == 0x1a)
+                                chk = 1;
+                            if (chk == 1 && (wBuff[tSize - 1] != 0x1a))
+                                break;
+                        }
+                    }
+
+                    if (chk == 1)
+                    {
+                        wBptr = tSize + 1;
+                        txtFile++;
+                    }
                 }
-
-
-                if (chk == 1)
-                    wBptr = tSize;
 
                 bin_out.Write(wBuff, 0, wBptr);     // write file buffer to disk
             }
@@ -1094,12 +1103,13 @@ namespace CPM
                     }
                     // look for 0x1A to indicate end of text file
                     var chk = 0;
+
                     for (; chk < buffSize; chk++)
                     {
                         if (wBuff[chk] == 0x1a)
                             break;
                     }
-                    if(chk == buffSize)
+                    if (chk == buffSize)
                         return wBuff;
                     else
                     {
@@ -1108,6 +1118,7 @@ namespace CPM
                             wBuff1[i] = wBuff[i];
                         return wBuff1;
                     }
+                    
                 }
 
             }

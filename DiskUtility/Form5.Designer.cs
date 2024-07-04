@@ -47,6 +47,10 @@
             this.btnH80_640 = new System.Windows.Forms.Button();
             this.btnH40_400 = new System.Windows.Forms.Button();
             this.btnH40_100 = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.btnRC2014_720 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonFolder
@@ -80,7 +84,7 @@
             // 
             // btnH8d100
             // 
-            this.btnH8d100.Location = new System.Drawing.Point(440, 146);
+            this.btnH8d100.Location = new System.Drawing.Point(440, 173);
             this.btnH8d100.Name = "btnH8d100";
             this.btnH8d100.Size = new System.Drawing.Size(130, 23);
             this.btnH8d100.TabIndex = 3;
@@ -90,7 +94,7 @@
             // 
             // btnH37_800
             // 
-            this.btnH37_800.Location = new System.Drawing.Point(440, 175);
+            this.btnH37_800.Location = new System.Drawing.Point(440, 202);
             this.btnH37_800.Name = "btnH37_800";
             this.btnH37_800.Size = new System.Drawing.Size(130, 23);
             this.btnH37_800.TabIndex = 5;
@@ -100,7 +104,7 @@
             // 
             // btnH37_640
             // 
-            this.btnH37_640.Location = new System.Drawing.Point(440, 204);
+            this.btnH37_640.Location = new System.Drawing.Point(440, 231);
             this.btnH37_640.Name = "btnH37_640";
             this.btnH37_640.Size = new System.Drawing.Size(130, 23);
             this.btnH37_640.TabIndex = 6;
@@ -130,7 +134,7 @@
             // 
             // btnH37_400
             // 
-            this.btnH37_400.Location = new System.Drawing.Point(440, 233);
+            this.btnH37_400.Location = new System.Drawing.Point(440, 260);
             this.btnH37_400.Name = "btnH37_400";
             this.btnH37_400.Size = new System.Drawing.Size(130, 21);
             this.btnH37_400.TabIndex = 10;
@@ -140,7 +144,7 @@
             // 
             // btnSz80_1440
             // 
-            this.btnSz80_1440.Location = new System.Drawing.Point(440, 318);
+            this.btnSz80_1440.Location = new System.Drawing.Point(440, 345);
             this.btnSz80_1440.Name = "btnSz80_1440";
             this.btnSz80_1440.Size = new System.Drawing.Size(130, 21);
             this.btnSz80_1440.TabIndex = 11;
@@ -150,7 +154,7 @@
             // 
             // btnDOS_360
             // 
-            this.btnDOS_360.Location = new System.Drawing.Point(440, 384);
+            this.btnDOS_360.Location = new System.Drawing.Point(588, 318);
             this.btnDOS_360.Name = "btnDOS_360";
             this.btnDOS_360.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_360.TabIndex = 12;
@@ -160,7 +164,7 @@
             // 
             // btnDOS_720
             // 
-            this.btnDOS_720.Location = new System.Drawing.Point(440, 411);
+            this.btnDOS_720.Location = new System.Drawing.Point(588, 345);
             this.btnDOS_720.Name = "btnDOS_720";
             this.btnDOS_720.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_720.TabIndex = 13;
@@ -170,7 +174,7 @@
             // 
             // btnH37_100
             // 
-            this.btnH37_100.Location = new System.Drawing.Point(440, 291);
+            this.btnH37_100.Location = new System.Drawing.Point(440, 318);
             this.btnH37_100.Name = "btnH37_100";
             this.btnH37_100.Size = new System.Drawing.Size(130, 21);
             this.btnH37_100.TabIndex = 14;
@@ -180,7 +184,7 @@
             // 
             // btnDOS_1440
             // 
-            this.btnDOS_1440.Location = new System.Drawing.Point(440, 438);
+            this.btnDOS_1440.Location = new System.Drawing.Point(588, 372);
             this.btnDOS_1440.Name = "btnDOS_1440";
             this.btnDOS_1440.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_1440.TabIndex = 15;
@@ -190,7 +194,7 @@
             // 
             // btnZ100_320
             // 
-            this.btnZ100_320.Location = new System.Drawing.Point(440, 345);
+            this.btnZ100_320.Location = new System.Drawing.Point(440, 372);
             this.btnZ100_320.Name = "btnZ100_320";
             this.btnZ100_320.Size = new System.Drawing.Size(130, 21);
             this.btnZ100_320.TabIndex = 16;
@@ -200,7 +204,7 @@
             // 
             // btnH37_320
             // 
-            this.btnH37_320.Location = new System.Drawing.Point(440, 260);
+            this.btnH37_320.Location = new System.Drawing.Point(440, 287);
             this.btnH37_320.Name = "btnH37_320";
             this.btnH37_320.Size = new System.Drawing.Size(130, 21);
             this.btnH37_320.TabIndex = 17;
@@ -210,7 +214,7 @@
             // 
             // btnH80_640
             // 
-            this.btnH80_640.Location = new System.Drawing.Point(588, 204);
+            this.btnH80_640.Location = new System.Drawing.Point(588, 173);
             this.btnH80_640.Name = "btnH80_640";
             this.btnH80_640.Size = new System.Drawing.Size(149, 23);
             this.btnH80_640.TabIndex = 18;
@@ -220,7 +224,7 @@
             // 
             // btnH40_400
             // 
-            this.btnH40_400.Location = new System.Drawing.Point(588, 233);
+            this.btnH40_400.Location = new System.Drawing.Point(588, 202);
             this.btnH40_400.Name = "btnH40_400";
             this.btnH40_400.Size = new System.Drawing.Size(149, 21);
             this.btnH40_400.TabIndex = 19;
@@ -230,7 +234,7 @@
             // 
             // btnH40_100
             // 
-            this.btnH40_100.Location = new System.Drawing.Point(588, 291);
+            this.btnH40_100.Location = new System.Drawing.Point(588, 229);
             this.btnH40_100.Name = "btnH40_100";
             this.btnH40_100.Size = new System.Drawing.Size(149, 21);
             this.btnH40_100.TabIndex = 20;
@@ -238,11 +242,55 @@
             this.btnH40_100.UseVisualStyleBackColor = true;
             this.btnH40_100.Click += new System.EventHandler(this.ButtonHDOS_100_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F);
+            this.label3.Location = new System.Drawing.Point(443, 140);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(106, 18);
+            this.label3.TabIndex = 21;
+            this.label3.Text = "CP/M Formats";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F);
+            this.label4.Location = new System.Drawing.Point(585, 140);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(112, 18);
+            this.label4.TabIndex = 22;
+            this.label4.Text = "HDOS Formats";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F);
+            this.label5.Location = new System.Drawing.Point(591, 290);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(129, 18);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "MS-DOS Formats";
+            // 
+            // btnRC2014_720
+            // 
+            this.btnRC2014_720.Location = new System.Drawing.Point(440, 399);
+            this.btnRC2014_720.Name = "btnRC2014_720";
+            this.btnRC2014_720.Size = new System.Drawing.Size(130, 21);
+            this.btnRC2014_720.TabIndex = 24;
+            this.btnRC2014_720.Text = "RC2014 720K";
+            this.btnRC2014_720.UseVisualStyleBackColor = true;
+            this.btnRC2014_720.Click += new System.EventHandler(this.btnRC2014_720_Click);
+            // 
             // Form5
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 557);
+            this.Controls.Add(this.btnRC2014_720);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.btnH40_100);
             this.Controls.Add(this.btnH40_400);
             this.Controls.Add(this.btnH80_640);
@@ -290,5 +338,9 @@
         private System.Windows.Forms.Button btnH80_640;
         private System.Windows.Forms.Button btnH40_400;
         private System.Windows.Forms.Button btnH40_100;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnRC2014_720;
     }
     }

@@ -59,20 +59,41 @@ class MsdosFile
 
         public List<DirList> fileNameList = new List<DirList>();
 
+        //Version 1.2d1
+        //public int[,] DiskType =
+        //{
+        //    // 0    1       2     3       4   5  6      7   8   9    10   11    12   13 14
+        //    {0xff, 0x400, 0x600,  0xE00,  1,  8, 0x200, 40, 2, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 320k
+        //    {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 160k
+        //    {0xfe, 0x400, 0x1400, 0x1800, 1,  8, 0x400, 77, 2, 0x400, 2, 1232, 0x4d0, 1, 3},   // MSDOS 77 trk, 1232k, 8"            
+        //    {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  360, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
+        //    {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  720, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
+        //    {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
+
+        //};
+
         //  Search used disk type in position 0 mostly, Looks for disk size of 320k first then disk ID in 0x15
-        /// // FAT 12 disks: 1. boot sector, 2. FAT1 3. FAT2 FAT may be one or two sectors 4. Directory start = # of sectors to contain # Dir entries * 32
-        // first data cluster is cluster 2
-        // 0.Disk type, 1.Allocation block size (Cluster), 2.Directory start, 3.dir size, 4.interleave, 5.Sectors per Track, 6.Sector Size,
-        // 7.# Tracks, 8. # heads, 9 FAT start, 10 # sectors in FAT, 11 Max FAT, 12 Total Sectors, 13 sectors per cluster, IMD Value
+        /// FAT 12 disks: 1. boot sector, 2. FAT1 3. FAT2 FAT may be one or two sectors
+        /// 4. Directory start = # of sectors to contain # Dir entries * 32
+        /// first data cluster is cluster 2
+        ///  Reference https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system#BIOS_Parameter_Block
+        ///  Reference https://en.wikipedia.org/wiki/List_of_floppy_disk_formats
+        ///  Reference https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
+        ///  Reference http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html
+        /// 
+        // 0.Disk type, 1.Allocation block size (Cluster), 2.Directory start, 3.dir size, 4.interleave, 5.Sectors per Track,
+        // 6.Sector Size, 7.# Tracks, 8. # heads, 9. FAT start, 10. # sectors in FAT, 
+        // 11. Max FAT, 12. Total Sectors, 13. sectors per cluster, 14. IMD Value
+        //
         public int[,] DiskType =
         {
             // 0    1       2     3       4   5  6      7   8   9    10   11    12   13 14
-            {0xff, 0x400, 0x600,  0xE00,  1,  8, 0x200, 40, 2, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 320k
-            {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 160k
-            {0xfe, 0x400, 0x1400, 0x1800, 1,  8, 0x400, 77, 2, 0x400, 2, 1232, 0x4d0, 1, 3},   // MSDOS 77 trk, 1232k, 8"            
-            {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  360, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
-            {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  720, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
-            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
+            {0xff, 0x400, 0x600,  0xE00,  1,  8, 0x200, 40, 2, 0x200, 1,  315, 0x280, 2, 4}, // MSDOS 40trk, 320k
+            {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  155, 0x140, 2, 4}, // MSDOS 40trk, 160k
+            {0xf9, 0x200, 0x1e00, 0x1c00, 1,  15, 0x200, 80, 2, 0x200, 7, 2371, 0x960, 1, 3},   // MSDOS 80 trk, 1200k, 5.25"            
+            {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  354, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
+            {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  714, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
+            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2847, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
   
         };
 

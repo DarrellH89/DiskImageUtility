@@ -22,6 +22,7 @@ namespace DiskUtility
     public partial class Form1 : Form
     {
         public static string FolderStr = "";
+        public static string options = "";
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         
@@ -79,7 +80,8 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.2d1 Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.2e Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+            // prev 1.2d1
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -123,6 +125,11 @@ namespace DiskUtility
             // DCP
             if (folderBrowserDialog2.SelectedPath.Length > 0) BtnFolder_init();
         }
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+          SaveData();
+        }
+
 
         // DCP
         private void BtnFolder_init()
@@ -200,8 +207,16 @@ namespace DiskUtility
                 if (stream != null)
                 {
                     folderBrowserDialog2.SelectedPath = stream.ReadLine();
+                    options = stream.ReadLine();
+                    if (options == null)
+                        options = " ";
                     stream.Close();
                 }
+
+                if (options.Contains("T"))
+                    btnOption.Text = "Text Trunc On";
+                else
+                    btnOption.Text = "Text Trunc Off";
             }
         }
 
@@ -211,6 +226,7 @@ namespace DiskUtility
             if (stream != null)
             {
                 stream.WriteLine(folderBrowserDialog2.SelectedPath);
+                stream.WriteLine(options);
                 stream.Close();
             }
         }
@@ -260,6 +276,23 @@ namespace DiskUtility
             makeDisk.unload( );
             Refresh();
             BtnFolder_initA();
+        }
+        //********************* Toggle Text File Truncation ***********************
+        private void btnOption_click(object sender, EventArgs e)
+        {
+            if (options.Contains("T"))
+            {
+                options = " ";
+                //MessageBox.Show("Text File truncation turned OFF", "Option Settings");
+                btnOption.Text = "Text Trunc Off";
+            }
+            else
+            {
+                options = " T";
+                //MessageBox.Show("Text File truncation turned ON", "Option Settings");
+                btnOption.Text = "Text Trunc On";
+            }
+
         }
         //********************* Delete File ***********************
         private void ButtonDelete(object sender, EventArgs e)
@@ -1159,13 +1192,13 @@ namespace DiskUtility
 
             return result;
         }
-        private int ExtractCpmFile(DiskFileEntry disk_file_entry)
+        private int ExtractCpmFile(DiskFileEntry disk_file_entry, ref int txtCnt)
         {
             var result = 0; // dcp extracted file count to deal with CP/M file extract fail
 
                 // dcp Add CPM Extract
                 var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
-                result = getCpmFile.ExtractFileCPM(disk_file_entry);
+                result = getCpmFile.ExtractFileCPM(disk_file_entry, ref txtCnt);
 
 
             return result;
@@ -1191,6 +1224,7 @@ namespace DiskUtility
             var files_extracted = 0;
             var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
             var diskTotal = 0;
+            var txtCnt = 0;
 
 
             var idx = listBoxFiles.SelectedIndex;
@@ -1208,7 +1242,7 @@ namespace DiskUtility
                             else if (entry.DiskImageName.Contains(".DOS"))
                                 files_extracted += ExtractDosFile(entry);
                             else if(entry.fileType == "CPM")
-                                 files_extracted += ExtractCpmFile(entry);
+                                 files_extracted += ExtractCpmFile(entry, ref txtCnt);
                             else if(entry.fileType == "HDOS")
                                 files_extracted += ExtractHdosFile(entry);
                             //break;
@@ -1231,7 +1265,7 @@ namespace DiskUtility
                         else if (entry.DiskImageName.Contains(".DOS"))
                             files_extracted += ExtractDosFile(entry);
                         else if (entry.fileType == "CPM")
-                            files_extracted += ExtractCpmFile(entry);
+                            files_extracted += ExtractCpmFile(entry, ref txtCnt);
                         else if (entry.fileType == "HDOS")
                             files_extracted += ExtractHdosFile(entry);
                        // break; ;
@@ -1241,6 +1275,8 @@ namespace DiskUtility
             if (files_extracted > 0)
             {
                 var message = string.Format("{0} file(s) extracted", files_extracted);
+                if (txtCnt > 0)
+                    message += string.Format(", {0} Text Files truncated at ^Z", txtCnt);
                 MessageBox.Show(this, message, "Disk Image Utility");
             }
         }
@@ -1413,6 +1449,8 @@ namespace DiskUtility
         value = textBox.Text;
         return dialogResult;
     }
+
+
     }
 
 }
