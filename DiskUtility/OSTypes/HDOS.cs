@@ -200,7 +200,7 @@ namespace HDOS
          */
         public int InsertFileHdos(string filename)
         {
-            var result = 1;
+            var result = Globals.Results.Success;
             long
                 //diskItemp,
                 filei = 0; // file buffer index
@@ -224,7 +224,7 @@ namespace HDOS
             // write the file to the disk image
             var filename8 = Path.GetFileNameWithoutExtension(filename);
             if (string.IsNullOrEmpty(filename8))
-                return 0;
+                return Globals.Results.Fail;
 
             var encoding = new ASCIIEncoding();
             filename8 = filename8.Substring(0, Math.Min(filename8.Length, 8));
@@ -239,7 +239,7 @@ namespace HDOS
             if (obj != null)
             {
                 MessageBox.Show("File Exists in image. Skipping", fileNameStr, MessageBoxButtons.OK);
-                return 0;
+                return Globals.Results.Fail;
             }
 
             // Find a Directory Entry
@@ -266,7 +266,7 @@ namespace HDOS
                         if (buf[diskGrtStart + startDir / diskSectorPerGroup/256] == 0) // out of directory entries
                         {
                             MessageBox.Show("Not enough Directory entries", "Directory Full", MessageBoxButtons.OK);
-                            result = 0;
+                            result = Globals.Results.Fail;
                             break;
                         }
                     }
@@ -294,12 +294,12 @@ namespace HDOS
                 if (nextFree == 0)
                 {
                     MessageBox.Show("Not enough space on the disk. Skipping", "Disk Full", MessageBoxButtons.OK);
-                    result = 0;
+                    result = Globals.Results.Full;
                 }
             }
 
 
-            if (result == 1)              // valid directory entry and space on disk
+            if (result == Globals.Results.Success)              // valid directory entry and space on disk
             {
                 var tt3 = (len % (diskSectorPerGroup * 256));
                 int lastGroupSector = (int)(padLen %(diskSectorPerGroup*256))/256;
@@ -351,7 +351,6 @@ namespace HDOS
         // update file count and total file size
         public void ReadHdosDir(string diskFileName, ref int diskTotal)
         {
-            int result = 0; 
             var encoding = new UTF8Encoding();
             int
                 dirBufPtr = 0,
@@ -437,7 +436,6 @@ namespace HDOS
             diskLabel = "HDOS " + encoding.GetString(tempLabel, 0, 3) + ": " + diskLabel;
             diskLabel = diskLabel.Replace('\0', ' ');
 
-            result = 1; // stub error checking while I figure out if any checks make sense
             startGroupBufPtr = startDirBufPtr = dirBufPtr = diskDirectStart; // start of cluster
             dirGroup = startGroupBufPtr / diskSectorPerGroup / 256; // start Group for DIRECT.SYS
             var fnameStr = "";

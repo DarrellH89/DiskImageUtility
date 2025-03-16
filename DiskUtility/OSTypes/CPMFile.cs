@@ -555,7 +555,7 @@ namespace CPM
          */
         public int InsertFileCpm(string filename)
         {
-            var result = 1;
+            var result = Globals.Results.Success;
             long diski = dirStart, // CP/M disk index
                 diskItemp,
                 filei = 0; // file buffer index
@@ -665,7 +665,7 @@ namespace CPM
                 {
                     // not enough room on disk, erase directory entries used so far
 
-                    result = 0;
+                    result = Globals.Results.Full;
                     break;
                 }
 
@@ -683,7 +683,7 @@ namespace CPM
                 var albDirCnt = 0;
                 var sectorCPMCnt = 0;
 
-                while (filei < len && albDirCnt < 16 && result > 0) // write up to 16 allocation blocks for this directory entry
+                while (filei < len && albDirCnt < 16 && result == Globals.Results.Success) // write up to 16 allocation blocks for this directory entry
                 // check for end of data to write, ALB < 16, for failure (result == 0)
                 {
                     // look for available allocation block
@@ -696,7 +696,7 @@ namespace CPM
                     // didn't find one, so quit
                     if (albCnt >= allocationBlockMap.Length)
                     {
-                        result = 0;
+                        result = Globals.Results.Fail;
                         break;
                     }
                     // write # of sectors in allocation block
@@ -749,7 +749,7 @@ namespace CPM
                 //buf[diski + 15] = (byte)Math.Ceiling((double)sectorCPMCnt / 128);
             }
 
-            if (result == 0)        // not enough directory entries or allocation blocks
+            if (result == Globals.Results.Fail)        // not enough directory entries or allocation blocks
             {
                 while (--dirListi >= 0)
                     if (dirList[dirListi] > 0)
@@ -950,13 +950,19 @@ namespace CPM
             var result = 1; // assume success
             var maxBuffSize = 0x2000; // largest allocation block size
             var diskTotal = 0;
+            var userArea = 0;
 
             var disk_image_file = disk_file_entry.DiskImageName;
             if (disk_image_file != DiskImageImdActive) ReadCpmDir(disk_image_file, ref diskTotal);
 
             var encoding = new UTF8Encoding();
             var dir = string.Format("{0}_Files",disk_image_file); // create directory name and check if directory exists
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            if (!Directory.Exists(dir)) 
+                Directory.CreateDirectory(dir);         // check root directory first
+            if (disk_file_entry.UserArea > 0)
+                dir = string.Format(dir + "\\{0}", userArea);
+            if (!Directory.Exists(dir))                     // add subdirectory for user area
+                Directory.CreateDirectory(dir);
             fnameb = encoding.GetBytes(disk_file_entry.FileName);
 
             // Create output File

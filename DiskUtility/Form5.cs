@@ -191,18 +191,22 @@ namespace DiskUtility
 
             fileCreate(0, "");
         }
+        private void ButtonDos_320_Click(object sender, EventArgs e)
+        {
+            fileCreateDos(320, "");
+        }
         private void ButtonDos_360_Click(object sender, EventArgs e)
         {
-            fileCreateDos(0xfd,"");
+            fileCreateDos(360,"");
         }
 
         private void ButtonDos_720_Click(object sender, EventArgs e)
         {
-            fileCreateDos(0xf9, "");
+            fileCreateDos(720, "");
         }
         private void ButtonDos_1440_Click(object sender, EventArgs e)
         {
-            fileCreateDos(0xf0, "");
+            fileCreateDos(1440, "");
         }
         private void ButtonHDOS_100_Click(object sender, EventArgs e)
         {
@@ -221,7 +225,7 @@ namespace DiskUtility
         {
 
         }
-        /******************* Lit Box 1 Double Click ********************/
+        /******************* List Box 1 Double Click ********************/
         /* opens selected disk image file to add files */
 
         private void listBox1_DoubleClick(object sender, EventArgs e)
@@ -312,9 +316,10 @@ namespace DiskUtility
 
 
             // Get Files to add to image
-            var startDir = tbFolder.Text;   // check if a working folder is selected
+            var startDir = Form1.addFilesLoc  ;   // get last used folder working folder is selected
             var fileCnt = 0;
             var filesSkipped = 0;
+            var filesFull = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -326,11 +331,25 @@ namespace DiskUtility
             openFileDialog1.FileName = "";
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                var results = Globals.Results.Success;
+                Form1.addFilesLoc = Path.GetDirectoryName(openFileDialog1.FileName);
                 foreach (String filename in openFileDialog1.FileNames)
-                    if (getHdos.InsertFileHdos(filename) == 1)
-                        fileCnt++;
+                {
+                    if (results != Globals.Results.Full)
+                    {
+                        results = getHdos.InsertFileHdos(filename);
+                        if ( results == Globals.Results.Success)
+                            fileCnt++;
+                        else
+                            filesSkipped++;
+                    }
                     else
-                        filesSkipped++;
+                    {
+                        filesFull++;
+                    }
+                }
+            }
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -342,7 +361,7 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
             MessageBox.Show(this, message, "Insert HDOS Files");
         }
 
@@ -445,9 +464,10 @@ namespace DiskUtility
 
 
             // Get Files to add to image
-            var startDir = tbFolder.Text;   // check if a working folder is selected
+            var startDir = Form1.addFilesLoc;   // check if a working folder is selected
             var fileCnt = 0;
             var filesSkipped = 0;
+            var filesFull = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -457,12 +477,26 @@ namespace DiskUtility
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
             string temp = "";
+
+            var results = Globals.Results.Success;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Form1.addFilesLoc = Path.GetDirectoryName(openFileDialog1.FileName);
                 foreach (String filename in openFileDialog1.FileNames)
-                    if (getCpm.InsertFileCpm(filename) == 1)
-                        fileCnt++;
-                    else 
-                        filesSkipped++;
+                    if (results != Globals.Results.Full)
+                    {
+                        results = getCpm.InsertFileCpm(filename);
+                        if (results == Globals.Results.Success)
+                            fileCnt++;
+                        if (results == Globals.Results.Fail)
+                            filesSkipped++;
+                    }
+                    else
+                    {
+                        filesFull++;
+                    }
+            }
+
             if (fileCnt > 0) // Added a file or two
                 {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -474,14 +508,15 @@ namespace DiskUtility
                 fsOut.Dispose();
                 }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
             MessageBox.Show(this, message, "Insert CP/M Files");
         }
+        /*
         /******************** File Create File for MS-DOS *******************************/
-        /* Input disk type - first value in file type data array
+        /* Input: disk size - used to determine media type in file type data array
 
          */
-        private void fileCreateDos(int diskType, string fileName)
+        private void fileCreateDos(int diskSize, string fileName)
         {
             var getDos = new MsdosFile(); // create instance of CPMFile, then call function
             // bool fileNew = false;
@@ -508,50 +543,79 @@ namespace DiskUtility
             var result = File.Exists(path);
 
             int diskTotalBytes = 0;
-
+            var diskType =0;
+            
 
             if (!result)                // create blank file image
             {
                 var ctr = 0;
+               var ds = diskSize * 1024;
                 for (; ctr < getDos.DiskType.GetLength(0); ctr++)
-                    if (diskType == getDos.DiskType[ctr, 0])
+                    if (ds == getDos.DiskType[ctr, 6]* getDos.DiskType[ctr, 12])
                         break;
                 if (ctr == getDos.DiskType.GetLength(0))
                     return;
+                diskType = getDos.DiskType[ctr, 0];         // get media descriptor
+                
                 diskTotalBytes = getDos.DiskType[ctr, 12] * getDos.DiskType[ctr, 6] ;
                 var dosBuf = new byte[diskTotalBytes];
-                for (var i = 0; i < diskTotalBytes; i++)
+                for (var i = 0; i < diskTotalBytes; i++)            // fill image with E5
                     dosBuf[i] = 0xE5;
-                switch (diskType)
+
+                        // offset Length   Value
+                        //  0B      2       bytes per sector
+                        //  0D      1       Sect / cluster
+                        //  0E      2       Reserved logical sectors
+                        //  10      1       sectors per FAT
+                        //  11      2       Max root DIR entries
+                        //  13      2       Total Sectors
+                        //  15      1       Media Descriptor
+                        //  16      2       Logical sectors per FAT
+                        //  18      2       Physical Sector per track
+                        //  1A      2       # heads
+                        //  1C      2       # hidden sectors before partition. 0 for floppy
+                switch (diskSize)
                 {
-                    case 0xfd:
+                    case 360:
                     {
-                        byte[] diskMark1 = { 0, 2, 2, 1, 0, 2, 0x70, 0, 0xd0, 2, 0xfd, 2, 0, 9, 0, 2};
+                        byte[] diskMark1 = { 0, 2, 2, 1, 0,
+                                             2,112, 0, 0x60, 9, 0xfd,2, 0, 9, 0, 2, 0};
                         for (var i = 0; i < diskMark1.Length; i++)
                             dosBuf[0xb+i] = diskMark1[i];
                         break;
                     }
-
-                    case 0xff:
+                    case 320:
                     {
-                        byte[] diskMark1 = { 0, 2, 2, 1,0,2, 0x70, 0, 0x80, 2, 9, 8, 0xa, 0, 1, 3, 0, 1, 0x18, 0xb0, 0, 0x3e, 0x37, 0x0f, 0x12, 0x18, 0x5f, 0 };
+                        byte[] diskMark1 = {   0, 2, 2, 1, 0,
+                                               2, 112, 0, 0x80, 2, 0xff, 2, 0, 8, 0, 2, 0 };
+                        //xa, 0, 1, 3, 0, 1, 0x18, 0xb0, 0, 0x3e, 0x37, 0x0f, 0x12, 0x18, 0x5f, 0 };
                         for (var i = 0; i < diskMark1.Length; i++)
                             dosBuf[4 + i] = diskMark1[i];
                             break;
                     }
-                    case 0xf0:
+                    case 1440:
                     {
-                        byte[] diskMark1 = { 0, 0x20, 1, 1, 0, 2, 0xe0, 0x40, 0x0b, 0xf0, 9, 0, 0x12, 0, 2, 0, 0, 0, 0, 0, 0x40, 0x0b };
+                        byte[] diskMark1 = { 0, 0x20, 1, 1, 0, 
+                                             2, 240, 0, 0x40, 0xb, 0xf0, 9, 0 ,0x12, 0, 2, 0, 0, 0};
                         for (var i = 0; i < diskMark1.Length; i++)
                             dosBuf[0xb + i] = diskMark1[i];
                         break;
                     }
-                    case 0xf9:
+                    case 720:
                     {
-                        byte[] diskMark1 = { 0, 2, 2, 1, 0, 2, 0xa0, 5, 0xf9, 3, 0, 9, 0, 2, 0 };
+                        byte[] diskMark1 = { 0, 2, 2, 1, 0, 
+                                             2, 112, 0, 0xa0, 0x5, 0xf9, 3, 0, 9, 0, 2, 0 };
                         for (var i = 0; i < diskMark1.Length; i++)
                             dosBuf[0xb + i] = diskMark1[i];
-                            break;
+                        break;
+                        }
+                    case 1200:
+                    {
+                        byte[] diskMark1 = { 0, 2, 2, 1, 1,
+                                             2, 240, 0, 0x60, 9, 0xf9, 7, 0, 9, 0, 2, 0 };
+                        for (var i = 0; i < diskMark1.Length; i++)
+                            dosBuf[0xb + i] = diskMark1[i];
+                        break;
                     }
                     default:
                         break;
@@ -579,9 +643,10 @@ namespace DiskUtility
             }
             getDos.ReadMsdosDir(path, ref diskTotalBytes);
             // Get Files to add to image
-            var startDir = tbFolder.Text;   // check if a working folder is selected
+            var startDir = Form1.addFilesLoc;   // check if a working folder is selected
             var fileCnt = 0;
             var filesSkipped = 0;
+            var filesFull = 0;
 
             if (startDir == "") startDir = "c:\\";
             openFileDialog1.InitialDirectory = startDir;
@@ -591,12 +656,25 @@ namespace DiskUtility
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
             string temp = "";
+            var results = Globals.Results.Success;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                Form1.addFilesLoc = Path.GetDirectoryName( openFileDialog1.FileName);
                 foreach (String filename in openFileDialog1.FileNames)
-                    if( getDos.InsertFileDos(filename) == 1)
-                        fileCnt++;
-                    else 
-                        filesSkipped++;
+                    if (results != Globals.Results.Full)
+                    {
+                        results = getDos.InsertFileDos(filename);
+                        if (results == Globals.Results.Success)
+                            fileCnt++;
+                        if(results == Globals.Results.Fail)
+                            filesSkipped++;
+                    }
+                    else
+                    {
+                        filesFull++;
+                    }
+            }
+
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -608,7 +686,7 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped", fileCnt, filesSkipped);
+            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
             MessageBox.Show(this, message, "Insert MS-DOS Files");
         }
 
@@ -674,5 +752,5 @@ namespace DiskUtility
         //    fileOutBytes.Close();
         //    fsOut.Dispose();
         //    }
-    }
+        }
 }

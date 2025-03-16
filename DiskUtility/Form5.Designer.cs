@@ -51,6 +51,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.btnRC2014_720 = new System.Windows.Forms.Button();
+            this.btnDOS_320 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonFolder
@@ -154,7 +155,7 @@
             // 
             // btnDOS_360
             // 
-            this.btnDOS_360.Location = new System.Drawing.Point(588, 318);
+            this.btnDOS_360.Location = new System.Drawing.Point(590, 345);
             this.btnDOS_360.Name = "btnDOS_360";
             this.btnDOS_360.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_360.TabIndex = 12;
@@ -164,7 +165,7 @@
             // 
             // btnDOS_720
             // 
-            this.btnDOS_720.Location = new System.Drawing.Point(588, 345);
+            this.btnDOS_720.Location = new System.Drawing.Point(590, 372);
             this.btnDOS_720.Name = "btnDOS_720";
             this.btnDOS_720.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_720.TabIndex = 13;
@@ -184,7 +185,7 @@
             // 
             // btnDOS_1440
             // 
-            this.btnDOS_1440.Location = new System.Drawing.Point(588, 372);
+            this.btnDOS_1440.Location = new System.Drawing.Point(590, 399);
             this.btnDOS_1440.Name = "btnDOS_1440";
             this.btnDOS_1440.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_1440.TabIndex = 15;
@@ -282,11 +283,22 @@
             this.btnRC2014_720.UseVisualStyleBackColor = true;
             this.btnRC2014_720.Click += new System.EventHandler(this.btnRC2014_720_Click);
             // 
+            // btnDOS_320
+            // 
+            this.btnDOS_320.Location = new System.Drawing.Point(590, 318);
+            this.btnDOS_320.Name = "btnDOS_320";
+            this.btnDOS_320.Size = new System.Drawing.Size(130, 21);
+            this.btnDOS_320.TabIndex = 25;
+            this.btnDOS_320.Text = "MS-DOS 320k";
+            this.btnDOS_320.UseVisualStyleBackColor = true;
+            this.btnDOS_320.Click += new System.EventHandler(this.ButtonDos_320_Click);
+            // 
             // Form5
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 557);
+            this.Controls.Add(this.btnDOS_320);
             this.Controls.Add(this.btnRC2014_720);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
@@ -342,5 +354,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnRC2014_720;
+        private System.Windows.Forms.Button btnDOS_320;
     }
     }

@@ -19,10 +19,12 @@ using static DiskUtility.Form1;
 
 namespace DiskUtility
 {
+
     public partial class Form1 : Form
     {
         public static string FolderStr = "";
         public static string options = "";
+        public static string addFilesLoc = "";
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         
@@ -80,7 +82,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.2e Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 1.2 f (16 Mar 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             FileViewerBorder = new GroupBox();
@@ -103,19 +105,19 @@ namespace DiskUtility
 
             FileViewerBorder.Controls.Add(FileViewerBox);
 
-            var FileViewerButton = new Button();
-            FileViewerButton.Name = "filebutton1";
-            FileViewerButton.Text = "CLOSE";
-            FileViewerButton.Location =
-            new Point(FileViewerBorder.Size.Width / 2 - FileViewerButton.Size.Width / 2, 550);
-            FileViewerButton.Click += new EventHandler(filebutton1_Click);
-            FileViewerButton.BackColor = Color.LightGray;
+            var fileViewerButton = new Button();
+            fileViewerButton.Name = "filebutton1";
+            fileViewerButton.Text = "CLOSE";
+            fileViewerButton.Location =
+            new Point(FileViewerBorder.Size.Width / 2 - fileViewerButton.Size.Width / 2, 550);
+            fileViewerButton.Click += new EventHandler(filebutton1_Click);
+            fileViewerButton.BackColor = Color.LightGray;
 
-            FileViewerBorder.Controls.Add(FileViewerButton);
+            FileViewerBorder.Controls.Add(fileViewerButton);
 
             BtnExtract.Enabled = false;
             DisableButtons();
-
+                
             folderBrowserDialog2.ShowNewFolderButton = false;
             DiskFileList = new ArrayList();
             //DiskLabelList = new ArrayList();
@@ -188,6 +190,7 @@ namespace DiskUtility
                 BtnExtract.Enabled = true; // enable Catalog button
                 bImageList = true;
             }
+            listBoxFiles.Items.Clear();
         }
 
         private void DisableButtons()
@@ -210,6 +213,9 @@ namespace DiskUtility
                     options = stream.ReadLine();
                     if (options == null)
                         options = " ";
+                    addFilesLoc = stream.ReadLine();
+                    if (addFilesLoc == null)
+                        addFilesLoc = folderBrowserDialog2.SelectedPath;
                     stream.Close();
                 }
 
@@ -227,6 +233,7 @@ namespace DiskUtility
             {
                 stream.WriteLine(folderBrowserDialog2.SelectedPath);
                 stream.WriteLine(options);
+                stream.WriteLine(addFilesLoc);
                 stream.Close();
             }
         }
@@ -370,7 +377,7 @@ namespace DiskUtility
                 // one or more files selected in listbox1
                 foreach (var lb in listBoxImages.SelectedItems)
                 {
-             
+
                     var disk_name = labelFolder.Text + "\\" + lb; // path + file name
                     // HDOS Check
                     byte[] tempBuf = new byte[512];
@@ -384,13 +391,16 @@ namespace DiskUtility
                     listBoxFiles.Items.Add(lb.ToString());
                     /*if (lb.ToString().Contains(".H8D"))
                         ProcessFile(disk_name);
-                    else 
+                    else
                     */
                     if (IsHDOSDisk(ref tempBuf))
-                        ProcessFileHdos(disk_name);    // process HDOS files
-                    else if (lb.ToString().Contains(".DOS")) 
+                    {
+                    ProcessFileHdos(disk_name); // process HDOS files
+
+                    }
+            else if (lb.ToString().Contains(".DOS")) 
                         ProcessFileDOS(disk_name);  // check for Z100 MS-DOS first
-                    else if (lb.ToString().Contains(".IMD"))
+                    else if (lb.ToString().Contains(".IMD"))   // assumes CP/M
                         ProcessFileImd(disk_name);
                     else
                         ProcessFileH37(disk_name);    // process CP/M files
@@ -555,6 +565,7 @@ namespace DiskUtility
                         }
 
                         var bin_out = new BinaryWriter(file_out);
+                        var numTrack = 0;
 
                         if (IMDfileType) // convert to H37, Z80, Z100
                         {
@@ -582,7 +593,7 @@ namespace DiskUtility
                                 }
 
                                 firstSector = bufPtr;
-                                //var numTrack = 0;
+
 
                                 int sectorCnt = 0, totalSect = 0;
 
@@ -590,6 +601,8 @@ namespace DiskUtility
                                 {
 
                                     totalSect++;
+                                    if (totalSect % spt == 0)    // Track counter for error message
+                                        numTrack++;
                                     var t0 = (sectorCnt) % spt;
                                     var modeVal = buf[bufPtr];
                                     Debug.WriteLine("Sector offset {0:X} Value {1:X}", bufPtr, buf[bufPtr]);
@@ -653,8 +666,9 @@ namespace DiskUtility
 
                                         if ((tb0[4] != tb1[4])&&(bufPtr < fileLen)) // Fatal Error, SPT changed
                                         {
-                                            MessageBox.Show( string.Format(shortFileName+" Sector per Track changed from {0} to {1}", 
-                                                             tb0[4], tb1[4]), "Fatal Error", MessageBoxButtons.OK );
+                                            MessageBox.Show(string.Format(shortFileName +
+                                                                          " Sector per Track changed from {0} to {1}. Track {2}, Data Pointer {3:x}",
+                                                                            tb0[4], tb1[4], numTrack, bufPtr, "Fatal Error", MessageBoxButtons.OK));
                                             abort = true;   // flag exit
                                         }
 
@@ -849,7 +863,9 @@ namespace DiskUtility
                 BtnFolder_initA();
         }
 
-        //******************************* Process File IMD ********************************
+        /******************************* Process File IMD ********************************
+         * Assumes file is CP/M
+         */
         private void ProcessFileImd(string DiskfileName) // for .IMD disks
         {
             var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
@@ -1416,9 +1432,16 @@ namespace DiskUtility
             }
             return (false);
         }
+        /************************ Is CPM Disk ***************************************/
+        // input: disk image buffer
+        // output: true if CPM disk
+        static public bool IsCPMDisk(ref byte[] track_buffer)
+        {
+            return (true);
+        }
 
-    /********************************** Input Dialog Box *********************************/
-    public static DialogResult InputBox(string title, string promptText, ref string value)
+        /********************************** Input Dialog Box *********************************/
+        public static DialogResult InputBox(string title, string promptText, ref string value)
     {
         Form form = new Form();
         Label label = new Label();

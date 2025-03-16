@@ -67,13 +67,18 @@ class MsdosFile
         //    {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  320, 0x280, 2, 4}, // MSDOS 40trk, 160k
         //    {0xfe, 0x400, 0x1400, 0x1800, 1,  8, 0x400, 77, 2, 0x400, 2, 1232, 0x4d0, 1, 3},   // MSDOS 77 trk, 1232k, 8"            
         //    {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  360, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
+        ///x    {0xfc, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880, 0xb40, 1, 3},   // MSDOS 40 trk, 180k, 5.25"   
         //    {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  720, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
+        //x    {0xf9, 0x400, 0xA00,  0xE00,  1,  15, 0x200, 80, 2, 0x200, 2,  720, 0x5A0, 2, 5}, // MSDOS 80trk, 1200k 5.25"
         //    {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2880, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
 
         //};
 
-        //  Search used disk type in position 0 mostly, Looks for disk size of 320k first then disk ID in 0x15
-        /// FAT 12 disks: 1. boot sector, 2. FAT1 3. FAT2 FAT may be one or two sectors
+        // FAT 12 Notes:
+        /// 
+        // Search used disk type in position 0 mostly, Looks for disk size of 320k first then disk ID in 0x15
+        /// FAT 12 disks: (entries are stored in little-endian, [LSB, MSB] )
+        /// 1. boot sector, 2. FAT1 3. FAT2 FAT may be one or two sectors
         /// 4. Directory start = # of sectors to contain # Dir entries * 32
         /// first data cluster is cluster 2
         ///  Reference https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system#BIOS_Parameter_Block
@@ -82,6 +87,8 @@ class MsdosFile
         ///  Reference http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html
         /// 
         // 0.Disk type, 1.Allocation block size (Cluster), 2.Directory start, 3.dir size, 4.interleave, 5.Sectors per Track,
+
+
         // 6.Sector Size, 7.# Tracks, 8. # heads, 9. FAT start, 10. # sectors in FAT, 
         // 11. Max FAT, 12. Total Sectors, 13. sectors per cluster, 14. IMD Value
         //
@@ -92,8 +99,8 @@ class MsdosFile
             {0xfe, 0x400, 0x2000,  0xE00,  1,  8, 0x200, 40, 1, 0x200, 1,  155, 0x140, 2, 4}, // MSDOS 40trk, 160k
             {0xf9, 0x200, 0x1e00, 0x1c00, 1,  15, 0x200, 80, 2, 0x200, 7, 2371, 0x960, 1, 3},   // MSDOS 80 trk, 1200k, 5.25"            
             {0xfd, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 40, 2, 0x200, 2,  354, 0x2D0, 2, 4}, // MSDOS 40trk, 360k
-            {0xf9, 0x400, 0xA00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 2,  714, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
-            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2847, 0xb40, 1, 3},   // MSDOS 80 trk, 1474k, 3.5"   
+            {0xf9, 0x400, 0xe00,  0xE00,  1,  9, 0x200, 80, 2, 0x200, 3,  714, 0x5A0, 2, 5}, // MSDOS 80trk, 720k 3.5"
+            {0xf0, 0x200, 0x2600, 0x1C00, 1, 18, 0x200, 80, 2, 0x200, 9, 2847, 0xb40, 1, 3},   // MSDOS 80 trk, 1440k, 3.5"   
   
         };
 
@@ -184,7 +191,7 @@ class MsdosFile
          */
         public int InsertFileDos(string filename)
         {
-            var result = 0;
+            var result = Globals.Results.Fail;
             //int allocBlock = DiskType[diskType, 1],
             //    dirStart = DiskType[diskType, 2],
             //    albDirSize = DiskType[diskType, 3],
@@ -208,7 +215,7 @@ class MsdosFile
             //if (filename.Length == 0||DiskImageImdActive.Length == 0)           // no filename to add
             //    return 0;
 
-            // read entire file into buffer
+            // read entire file to add to the disk image into buffer
             var file = File.OpenRead(filename);
             var len = file.Length; 
             var filebuf = new byte[len];
@@ -263,9 +270,9 @@ class MsdosFile
             }
             if((maxFat -fatCnt) * albSize < len)
             {
-                MessageBox.Show("File too large for available disk space", "File Size Error",
-                    MessageBoxButtons.OK);
-                return result;
+                //MessageBox.Show("File too large for available disk space", "File Size Error",
+                //    MessageBoxButtons.OK);
+                return Globals.Results.Full;
             }
             // Find available directory entry
 
@@ -281,7 +288,7 @@ class MsdosFile
                 {
                     if (buf[bufPtr + diskIndx] == 0xe5 || buf[bufPtr + diskIndx] == 0x00) // erased or available
                     {
-                        result = 1;
+                        result = Globals.Results.Success;
                         break;
                     }
                     else diskIndx += 32;
@@ -289,7 +296,7 @@ class MsdosFile
                 }
             }
 
-            if (result > 0)
+            if (result == Globals.Results.Success)
             {
                 // add directory entry
                 var fn = filenameb.ToUpper().ToCharArray();
@@ -329,25 +336,25 @@ class MsdosFile
                 while (rBptr < len)
                 {
                     wBptr = dirStart + dirSize +  (currFat-2) * albSize;
-                    for (var k = 0; k < albSize && rBptr < len; k++)
+                    for (var k = 0; k < albSize && rBptr < len; k++)     // write 1 sector to buffer
                     {
                             buf[wBptr++] = filebuf[rBptr++];
                     }
                     if (rBptr < len)
                     {
                         while (fatMap[nextFat] != 0) 
-                            nextFat++; // find next open FAT
+                            nextFat++;                          // find next open FAT
                         fatMap[currFat] = nextFat;
                         currFat = nextFat++;
                     }
                 }
                 //while (fatMap[nextFat] != 0) nextFat++;         // find next open FAT
                 fatMap[currFat] = 0xfff;                     // end of FAT chain marker
-                // write FAT Table
+                // write fatMap to FAT Table
                 var clusterNum = 0;
                 var wFatPtr = fatPtr;
                 var fatSize = maxFat * 3 / 2;
-                while( clusterNum < maxFat)            // 
+                while( clusterNum < maxFat-1)            // 
                 {
                     var temp = fatMap[clusterNum++] & 0xfff | fatMap[clusterNum++] << 12;
                     for (var i = 0; i < 3; i++)
@@ -360,7 +367,7 @@ class MsdosFile
                     
                 }
 
-                for (var i = 0; i < maxFat * 3 / 2; i++)
+                for (var i = 0; i < maxFat * 3 / 2; i++)                    // Copy to FAT #2
                     buf[fatPtr + fatSectors * sectorSize+i] = buf[fatPtr + i];
 
             }
@@ -419,35 +426,41 @@ class MsdosFile
             int ctr,
                 bufPtr = 0;
 
+                // Check media descriptor byte value and disk size
             for (ctr = 0; ctr < DiskType.GetLength(0); ctr++) // search DiskType array for values
                 if (diskType == DiskType[ctr, 0] && (diskTotal == DiskType[ctr,12]* DiskType[ctr, 6] ||
-                                                     diskTotal == (DiskType[ctr, 12] * DiskType[ctr, 6])+32))
-                    //|| ctr == DiskType.GetLength(0) - 1)
+                                                     diskTotal == (DiskType[ctr, 12] * DiskType[ctr, 6])+32)) // not sure what the +32 is for
                 {
-                    // if ctr equals last value, use as default
-                    albSize = DiskType[ctr, 1]; // ALB Size
-                    dirStart = DiskType[ctr, 2]; // physical start of directory
-                    dirSize = DiskType[ctr, 3]; // size of the directory
-                    intLv = DiskType[ctr, 4]; // interleave
-                    spt = DiskType[ctr, 5]; // sectors per track  
-                    sectorSize = DiskType[ctr, 6]; // sector size
-                    numTrack = DiskType[ctr, 7]; // number of tracks on the disk
-                    numHeads = DiskType[ctr, 8];  // number of heads
-                    maxFat = DiskType[ctr,11];      // max number of FAT entries
-                    maxSect = DiskType[ctr, 12];     // max number of sectors
-                    diskSize = numTrack * numHeads  * spt * sectorSize / 1024;
-                    dirSectStart = dirStart / sectorSize;
-                    fatPtr = DiskType[ctr, 9]; // First FAT location
-                    fatSectors = DiskType[ctr, 10];
-                    dataStart = dirStart + dirSize;
-                    break;
+                     break;
                 }
+            else if (diskTotal == DiskType[ctr, 12] * DiskType[ctr, 6])     // assign diskTotal based on file size
+            {
+                diskType = DiskType[ctr, 0];
+                break;
+            }
 
             // error if no match found
             if (ctr == DiskType.GetLength(0))
                 MessageBox.Show("Error - MS-DOS Disk Type not found in File", diskFileName, MessageBoxButtons.OK);
             else
+            {
                 result = 1;
+                albSize = DiskType[ctr, 1]; // ALB Size
+                dirStart = DiskType[ctr, 2]; // physical start of directory
+                dirSize = DiskType[ctr, 3]; // size of the directory
+                intLv = DiskType[ctr, 4]; // interleave
+                spt = DiskType[ctr, 5]; // sectors per track  
+                sectorSize = DiskType[ctr, 6]; // sector size
+                numTrack = DiskType[ctr, 7]; // number of tracks on the disk
+                numHeads = DiskType[ctr, 8];  // number of heads
+                maxFat = DiskType[ctr, 11];      // max number of FAT entries
+                maxSect = DiskType[ctr, 12];     // max number of sectors
+                diskSize = numTrack * numHeads * spt * sectorSize / 1024;
+                dirSectStart = dirStart / sectorSize;
+                fatPtr = DiskType[ctr, 9]; // First FAT location
+                fatSectors = DiskType[ctr, 10];
+                dataStart = dirStart + dirSize;
+            }
             if (result == 1) // done error checking, read directory
             {
                 // Read Dir
@@ -755,7 +768,6 @@ class MsdosFile
         {
             // Check if file already in memory. If not, then process
             // open file: fileName
-            // check H37 file type in byte 6
             // get disk parameters
             // Read directory gathering file names and sizes
             // update fcbList with fcb list for each file
