@@ -61,8 +61,8 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
   * Create a folder for each user area when extracting CP/M files
   *	Added 320k Floppy disk image capability
 *	2.0
-  *	Change IMD to IMG conversion to allow for SPT changes on different tracks
-  *	Corrected bug on RC2014 disk creation where the create function wasn’t called
-  *	
+    *	Change IMD to IMG conversion to allow for SPT changes on different tracks
+    *	Corrected bug on RC2014 disk creation where the create function wasn’t called
+    
 
 
