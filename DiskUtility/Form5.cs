@@ -120,6 +120,7 @@ namespace DiskUtility
             switch (dos)
             {
                 case 'C':
+                    btnDOS_320.Enabled=false;
                     btnDOS_360.Enabled = false;
                     btnDOS_720.Enabled = false;
                     btnDOS_1440.Enabled = false;
@@ -139,6 +140,8 @@ namespace DiskUtility
                     btnDOS_360.Enabled = false;
                     btnDOS_720.Enabled= false;
                     btnDOS_1440.Enabled = false;
+                    btnRC2014_720.Enabled = false;
+                    btnDOS_320.Enabled = false;
                     break;
                 case 'D':
                     btnH8d100.Enabled = false;
@@ -152,6 +155,7 @@ namespace DiskUtility
                     btnH80_640.Enabled = false;
                     btnH40_400.Enabled = false;
                     btnH40_100.Enabled = false;
+                    btnRC2014_720.Enabled=false;
                     break;
             }
         }
@@ -223,7 +227,7 @@ namespace DiskUtility
 
         private void btnRC2014_720_Click(object sender, EventArgs e)
         {
-
+            fileCreate(1, "");
         }
         /******************* List Box 1 Double Click ********************/
         /* opens selected disk image file to add files */
@@ -361,8 +365,8 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
-            MessageBox.Show(this, message, "Insert HDOS Files");
+            insertMessage(fileCnt, filesSkipped, filesFull, "Insert HDOS Files");
+
         }
 
         /******************** File Create File for CP/M *******************************/
@@ -508,8 +512,27 @@ namespace DiskUtility
                 fsOut.Dispose();
                 }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
-            MessageBox.Show(this, message, "Insert CP/M Files");
+           insertMessage( fileCnt, filesSkipped, filesFull, "Insert CP/M Files");
+
+        }
+        /*
+         * ***************************** insert Message *******************
+         * input: fileCnt, filesSkipped, filesFull, caption string
+         */
+        private void insertMessage(int fileCnt, int filesSkipped, int filesFull, string cap)
+        {
+            var message = "";
+            if (fileCnt > 0)
+                message += string.Format("{0} file(s) Added", fileCnt);
+            if(message.Length > 0 && filesSkipped>0)
+                    message+= string.Format(", ");
+            if (filesSkipped > 0)
+                message += string.Format("{0} files(s) skipped", filesSkipped);
+            if (message.Length > 0 && filesFull > 0)
+                message += string.Format(", ");
+            if (filesFull >0)
+                message += string.Format("{0} file(s) not added due to full disk", filesFull);
+            MessageBox.Show(this, message, cap);
         }
         /*
         /******************** File Create File for MS-DOS *******************************/
@@ -686,8 +709,8 @@ namespace DiskUtility
                 fsOut.Dispose();
             }
             buttonFolder_Init(start);
-            var message = string.Format("{0} file(s) Added, {1} file(s) skipped, {2} files(s) not added due to full disk", fileCnt, filesSkipped, filesFull);
-            MessageBox.Show(this, message, "Insert MS-DOS Files");
+            insertMessage(fileCnt, filesSkipped, filesFull, "Insert MS-DOS Files");
+
         }
 
 

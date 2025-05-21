@@ -82,7 +82,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 1.2 f (16 Mar 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 2.0 (21 May 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             FileViewerBorder = new GroupBox();
@@ -451,10 +451,12 @@ namespace DiskUtility
         }
         //************************** TrackData *************************
         // stores IMD track data
+        // input file buffer, ptr to current byte being processed
+        // returns array of track map data
         private byte[] TrackData(byte[] b, int ptr)
         {
             var tb = new byte[50];
-            int p = ptr, tbptr, temp, power=0;
+            int p = ptr, tbptr, temp;
 
             tb[1] = b[p++];           // mode
             tb[2] = b[p++];           // cylinder
@@ -465,8 +467,8 @@ namespace DiskUtility
             //var t2 = Math.Pow(2, t1);
             //var t3 = (byte)(Math.Pow(2, b[p++]) * 128);
             //tb[5] = (byte) (Math.Pow(2, b[p++])*128);   // Sector size flag
-            tbptr = 6;
-            temp = p + tb[4];
+            tbptr = 6;          // current buffer position
+            temp = p + tb[4];       // end position for sector order data
             for (; p < temp; p++)  // sector map
                 tb[tbptr++] = b[p];
             temp = p + tb[4];
@@ -482,12 +484,12 @@ namespace DiskUtility
         {
             var sectorSizeList = new int[] { 128, 256, 512, 1024, 2048, 4096, 8192 }; // IMD values
   
-            List<byte[]> trackList = new List<byte[]>() ;
+            List<byte[]> trackList = new List<byte[]>() ;  // build list for all track information
             int trackChange = 0;
             int dataReadError = 0;
             int cylHeadCnt = 0;
-            byte[] tb0 = new byte[50] ;
-            byte[] tb1 = new byte[50];
+            byte[] tb0 = new byte[50] ; // current track information
+            byte[] tb1 = new byte[50];  // next track info.
             bool abort = false;
             int trackStart;
             int[] diskSkew = new int[25];           // larger than any known SPT
@@ -571,17 +573,18 @@ namespace DiskUtility
                         {
                             while (buf[bufPtr] != 0x1a && bufPtr < fileLen)
                                 bufPtr++; // look for end of text comment in IMD file
-                            if (bufPtr < fileLen && buf[bufPtr + 1] < 6
-                            ) // process as IMD file - found end of comment and next byte is valid
+                            if (bufPtr < fileLen && buf[bufPtr + 1] < 6) // process as IMD file - found end of comment and next byte is valid
+                            // process entire file
                             {
-                                tb0 = TrackData( buf,++bufPtr );
+                                tb0 = TrackData(buf, ++bufPtr);  // send file buffer with ptr to first byte of IMD track data
                                 trackList.Add(tb0);         // Save initial track information
                                 trackStart = bufPtr;
                                 bufPtr += 3; // skip cylinder count, head value used for extra data flag
                                 var spt = buf[bufPtr++]; // sectors per track
                                 var sectorSize = sectorSizeList[buf[bufPtr++]];
                                 //diskSkew = new int[spt];
-                                for (var i = 0; i < spt; i++) diskSkew[i] = buf[bufPtr++]; // load skew table
+                                for (var i = 0; i < spt; i++) 
+                                    diskSkew[i] = buf[bufPtr++]; // load skew table
                                 //int shift = 0, temp = 0;
                                 if((trackStart + tb0[0]-1)!= bufPtr)
                                     Debug.WriteLine("Initial Track Header Miscount. Calc {0:X} Actual {1:X}",
@@ -646,7 +649,7 @@ namespace DiskUtility
                                     }
 
                                     sectorCnt++;
-                                    if (sectorCnt == spt)
+                                    if (sectorCnt == spt)       // track processing complete
                                     {
                                         bin_out.Write(wbuf, 0, spt * sectorSize); // write a track at a time
                                         sectorCnt = 0;
@@ -668,14 +671,14 @@ namespace DiskUtility
                                         {
                                             MessageBox.Show(string.Format(shortFileName +
                                                                           " Sector per Track changed from {0} to {1}. Track {2}, Data Pointer {3:x}",
-                                                                            tb0[4], tb1[4], numTrack, bufPtr, "Fatal Error", MessageBoxButtons.OK));
-                                            abort = true;   // flag exit
+                                                                            tb0[4], tb1[4], numTrack, bufPtr, "SPT Changed", MessageBoxButtons.OK));
+                                            //abort = true;   // flag exit
                                         }
 
                                         if (!ok)
                                         {
                                             trackList.Add(tb1);         // Save new track information
-                                            for (var i = 0; i < tb1[0]; i++)
+                                            for (var i = 0; i < tb1[0]; i++)    // copy new to old
                                             {
                                                 tb0[i] = tb1[i];
                                             }

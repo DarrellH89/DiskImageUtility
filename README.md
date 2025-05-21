@@ -51,5 +51,17 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
   * Fixed ^Z detection for text files truncating binary files
 * 1.2e
   * Added on/off button for ^Z feature
+* 1.2f
+  *	Fix Create 720k MS-DOS disk resulting in 1200k image
+  *	Fix Large IMD file treated like CP/M disk
+  * Exit Insert functi  *n after Disk Full error message, s  * you d  *n't keep processing files
+  *	After adding a new disk, clear File List
+  * Clear File List   *n Folder Change
+  *	Remember last location you added files
+  * Create a folder for each user area when extracting CP/M files
+  *	Added 320k Floppy disk image capability
+*	2.0
+  * Change IMD to IMG conversion to allow for SPT changes on different tracks
+  * Corrected bug on RC2014 disk creation where the create function wasn’t called
 
 

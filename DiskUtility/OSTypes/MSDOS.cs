@@ -235,7 +235,7 @@ class MsdosFile
             var ext3 = Path.GetExtension(filename);
             ext3 = string.IsNullOrEmpty(ext3) ? ext3 = "   " : ext3 = ext3.Substring(1, Math.Min(ext3.Length - 1, 3));
             ext3 = ext3.PadRight(3, ' ');
-            var filenameb = string.Format(filename8 + ext3);
+            var filenameb = string.Format(filename8 + ext3).ToUpper();
           
             var obj = fileNameList.FirstOrDefault(x => x.fname == filenameb);
             if (obj != null)

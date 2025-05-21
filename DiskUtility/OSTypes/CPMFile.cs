@@ -959,6 +959,7 @@ namespace CPM
             var dir = string.Format("{0}_Files",disk_image_file); // create directory name and check if directory exists
             if (!Directory.Exists(dir)) 
                 Directory.CreateDirectory(dir);         // check root directory first
+            userArea = disk_file_entry.UserArea;
             if (disk_file_entry.UserArea > 0)
                 dir = string.Format(dir + "\\{0}", userArea);
             if (!Directory.Exists(dir))                     // add subdirectory for user area
