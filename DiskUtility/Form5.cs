@@ -229,6 +229,10 @@ namespace DiskUtility
         {
             fileCreate(1, "");
         }
+        private void btnRC2014_1440_Click(object sender, EventArgs e)
+        {
+            fileCreate(0, "");
+        }
         /******************* List Box 1 Double Click ********************/
         /* opens selected disk image file to add files */
 
@@ -775,5 +779,5 @@ namespace DiskUtility
         //    fileOutBytes.Close();
         //    fsOut.Dispose();
         //    }
-        }
+    }
 }

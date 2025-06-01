@@ -52,6 +52,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.btnRC2014_720 = new System.Windows.Forms.Button();
             this.btnDOS_320 = new System.Windows.Forms.Button();
+            this.btnRC2014_1440 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonFolder
@@ -293,11 +294,22 @@
             this.btnDOS_320.UseVisualStyleBackColor = true;
             this.btnDOS_320.Click += new System.EventHandler(this.ButtonDos_320_Click);
             // 
+            // btnRC2014_1440
+            // 
+            this.btnRC2014_1440.Location = new System.Drawing.Point(440, 432);
+            this.btnRC2014_1440.Name = "btnRC2014_1440";
+            this.btnRC2014_1440.Size = new System.Drawing.Size(130, 21);
+            this.btnRC2014_1440.TabIndex = 26;
+            this.btnRC2014_1440.Text = "RC2014 1,440K";
+            this.btnRC2014_1440.UseVisualStyleBackColor = true;
+            this.btnRC2014_1440.Click += new System.EventHandler(this.btnRC2014_1440_Click);
+            // 
             // Form5
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 557);
+            this.Controls.Add(this.btnRC2014_1440);
             this.Controls.Add(this.btnDOS_320);
             this.Controls.Add(this.btnRC2014_720);
             this.Controls.Add(this.label5);
@@ -355,5 +367,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnRC2014_720;
         private System.Windows.Forms.Button btnDOS_320;
+        private System.Windows.Forms.Button btnRC2014_1440;
     }
     }
