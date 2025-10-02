@@ -464,7 +464,7 @@ namespace HDOS
                     var flagStr = HdosFlag(buf[dirBufPtr + 0xe], (byte)diskInitVer);
                     
                     // File Creation Date
-                    var fDate = buf[dirBufPtr + 0x13] * 256 + buf[dirBufPtr + 0x14];
+                    var fDate = buf[dirBufPtr + 0x13] + buf[dirBufPtr + 0x14]*256;
 
                     // Create temp storage
                     firstGroup = buf[dirBufPtr + 0x10];
@@ -535,40 +535,55 @@ namespace HDOS
 
         // ************** HdosDate  *********************
         // inputs: int day, month, year
-        // output: Date int, Bit format "MMMDDDDDYYYYYYYM"
-
+                                    // Bad intel from 1984 REMark article
+                                    // output: Date int, Bit format "MMMDDDDDYYYYYYYM"
+                                    // month = 4 bits = 16, day = 5 bits = 32, year = 7 bits = 128
+        //This is the new y2k date encoding:
+        //15-----------9 8------5 4--------0
+        //| 7-bits      | 4-bits | 5-bits |
+        //-------------- -------- ----------
+        //Year 00-99 Mon 1-12 Day 1-31
+        //
+        // output: Formatted Date string
         private int HdosDate(int d, int m, int y)
         {
-            d = d << 8;
-            m = (m & 0x07) << 16 + (m & 0x08) >> 3;
-            y = (y-1970) << 1;
+            d = d & 0x1f;
+            m = (m & 0x0f) << 5 ;
+            y = (y% 100) << 9;
             return d + m + y;
         }
 
         // ************** HdosDateStr  *********************
-        // inputs: Date int, Bit format "MMMDDDDDYYYYYYYM"
+       
         //This is the new y2k date encoding:
         //15-----------9 8------5 4--------0
-        //| 7-bits | 4-bits | 5-bits |
+        //| 7-bits      | 4-bits | 5-bits |
         //-------------- -------- ----------
-        //Year 00-99 Mon 1-12 Day 1-31
+          //Year 00-99 Mon 1-12 Day 1-31
         //
-        // output: flag string
+        // output: Formatted Date string
 
         string HdosDateStr(int date)
         {
             var result = "";
             string[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-            var month = ((date & 0x001) << 3) + ((date & 0xe000) >> 13) - 1;
-            var t1 = (date & 0x001) << 3;
-            var t2 = ((date & 0xe000) >> 13);
-            if (month > 11 || month < 0)
+            var month = ((date & 0x1e0) >> 5)-1;
+            if (month < 0 || month > 11)
                 month = 11;
-            var day = (date & 0x1f00) >> 8;
-            var year = ((date & 0x0fe) >> 1) + 70;
-            if(year > 100)
+            var day = date & 0x1f;
+            var year = ((date & 0x0fe00) >> 9);
+           /* if (year > 100)
                 year -= 100;
-            
+            /*   var month = ((date & 0x001) << 3) + ((date & 0xe000) >> 13) - 1;
+               var t1 = (date & 0x001) << 3;
+               var t2 = ((date & 0xe000) >> 13);
+               if (month > 11 || month < 0)
+                   month = 11;
+               var day = (date & 0x1f00) >> 8;
+               var year = ((date & 0x0fe) >> 1) + 70;
+               if(year > 100)
+                   year -= 100;
+             */
             result = string.Format("{0:D}-{1}-{2:D}", day, months[month], year);
 
             return result;
@@ -1079,8 +1094,8 @@ namespace HDOS
             buf[bPtr + 0x10] = (byte)fCluster;
             buf[bPtr + 0x11] = (byte)lCluster;
             buf[bPtr + 0x12] = (byte)lSector;
-            buf[bPtr + 0x13] = (byte)((cDate & 0xff00) >> 8);
-            buf[bPtr + 0x14] = (byte)(cDate & 0xff);
+            buf[bPtr + 0x13] = (byte)(cDate & 0xff);
+            buf[bPtr + 0x14] = (byte)((cDate & 0xff00) >> 8);
             buf[bPtr + 0x15] = 0;
             buf[bPtr + 0x16] = 0;
         }

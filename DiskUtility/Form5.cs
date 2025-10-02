@@ -272,7 +272,7 @@ namespace DiskUtility
         // 3 - 640k, 80T, 2 sides, 16 SPT, 256 byte sector, 10 sectors per Group, 2550 sector
          */
         private void fileCreateHdos(int diskType, string fileName)
-        {
+            {
             var getHdos = new HDOSFile();
             string path = fileName;
             int diskTotalBytes = 0;

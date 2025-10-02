@@ -82,7 +82,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 2.1 (1 June 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 2.2 (1 Oct 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             FileViewerBorder = new GroupBox();
