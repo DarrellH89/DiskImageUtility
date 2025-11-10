@@ -202,7 +202,7 @@ namespace MSDOSAdd
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += getDos.InsertFileMsdos(filename);
+                    fileCnt += getDos.InsertFileDos(filename);
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
