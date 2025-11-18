@@ -68,7 +68,7 @@ namespace MSDOSAdd
                 foreach (string files in file_list) // add file names to listbox1
                 {
                     string file_name;
-                    file_name = files.Substring(files.LastIndexOf("\\") + 1).ToUpper();
+                    file_name = Path.GetFileName(files);
                     listBox1.Items.Add(file_name);
                     string file_count = string.Format("{0} disk images", listBox1.Items.Count.ToString());
                     //label4.Text = file_count;
@@ -192,7 +192,7 @@ namespace MSDOSAdd
                 tbFolder.Text; // openFileDialog1.InitialDirectory; // check if a working folder is selected
             var fileCnt = 0;
 
-            if (startDir == "") startDir = "c:\\";
+            if (startDir == "") startDir = "c:/";
             openFileDialog1.InitialDirectory = startDir;
             openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 2;
@@ -202,7 +202,7 @@ namespace MSDOSAdd
             string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
                 foreach (String filename in openFileDialog1.FileNames)
-                    fileCnt += getDos.InsertFileMsdos(filename);
+                    fileCnt += getDos.InsertFileDos(filename);
             if (fileCnt > 0) // Added a file or two
             {
                 FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
@@ -223,7 +223,7 @@ namespace MSDOSAdd
             string path = "";
             foreach (var lb in listBox1.SelectedItems)
             {
-                path = tbFolder.Text + "\\" + lb.ToString();
+                path = tbFolder.Text + "/" + lb.ToString();
                 fileCreate(0, path);
             }
         }
@@ -263,7 +263,7 @@ namespace MSDOSAdd
                 tbFolder.Text; // openFileDialog1.InitialDirectory; // check if a working folder is selected
             var fileCnt = 0;
 
-            if (startDir == "") startDir = "c:\\";
+            if (startDir == "") startDir = "c:/";
             openFileDialog1.InitialDirectory = startDir;
             openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 2;

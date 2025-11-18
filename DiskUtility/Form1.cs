@@ -181,7 +181,7 @@ namespace DiskUtility
             {
                 foreach (var files in file_list) // add file names to listbox1
                 {
-                    string fileName = files.Substring(files.LastIndexOf("\\") + 1).ToUpper();
+                    string fileName = Path.GetFileName(files);
                     listBoxImages.Items.Add(fileName);
                     var file_count = string.Format("{0} disk images", listBoxImages.Items.Count.ToString());
                     label3.Text = file_count;
@@ -378,7 +378,7 @@ namespace DiskUtility
                 foreach (var lb in listBoxImages.SelectedItems)
                 {
 
-                    var disk_name = labelFolder.Text + "\\" + lb; // path + file name
+                    var disk_name = labelFolder.Text + "/" + lb; // path + file name
                     // HDOS Check
                     byte[] tempBuf = new byte[512];
                     var file = File.OpenRead(disk_name); // read entire file into an array of byte
@@ -409,7 +409,7 @@ namespace DiskUtility
             else // no files selected, so process all of them in listbox1
                 foreach (var lb in listBoxImages.Items)
                 {
-                    var disk_name = labelFolder.Text + "\\" + lb;
+                    var disk_name = labelFolder.Text + "/" + lb;
                     // HDOS Check
                     byte[] tempBuf = new byte[512];
                     var file = File.OpenRead(disk_name); // read entire file into an array of byte
@@ -509,7 +509,7 @@ namespace DiskUtility
                         var IMDfileType = lb.ToString().ToUpper().EndsWith(".IMD"); // test for IMD file
                         // read entire file into memory
                         var shortFileName = lb.ToString();
-                        var diskFileName = labelFolder.Text + "\\" + lb.ToString();
+                        var diskFileName = labelFolder.Text + "/" + lb.ToString();
                         var file = File.OpenRead(diskFileName); // read entire file into an array of byte
                         var fileByte = new BinaryReader(file);
                         var fileLen = (int) file.Length;
@@ -1320,7 +1320,7 @@ namespace DiskUtility
                     if (lb.ToString().ToUpper().EndsWith(".H8D"))
                     {
                         // read entire file into memory
-                        var diskFileName = labelFolder.Text + "\\" + lb.ToString();
+                        var diskFileName = labelFolder.Text + "/" + lb.ToString();
                         var file = File.OpenRead(diskFileName); // read entire file into an array of byte
                         var fileByte = new BinaryReader(file);
                         var fileLen = (int) file.Length;

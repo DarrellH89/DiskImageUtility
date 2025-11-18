@@ -2,9 +2,16 @@
 
 Disk Image Utility for Flash Floppy Gotek Heathkit H-89 and Z-100 Disk Image Utility is designed to support using Flash Floppy or HxC flashed Gotek drives with Heathkit 1980 era computers. It supports the native disk formats using IMG files and allows you to extract and add files from your PC to the disk image file. It currently supports CP/M, HDOS, and MS-DOS FAT 12 formats used by the H-8, H-89, and Z-100. Support added for RC2014 CP/M 720k format.
 
-If you want to copy files between images you must first extract the file and then insert the file in another image. Complete documentation is in the file Disk Utility.docx.
+If you want to copy files between images you must first extract the file and then insert the file in another image. Complete documentation is in the file [Disk Utility.docx][fulldocs].
 
 Disk Image Utility can also create blank disk images in several CP/M, HDOS, and MS-DOS formats which you can use in a Flash Floppy or HxC flashed Gotek. Disk Image Utility also supports adding files to these images. File deletion is currently only supoorted in HDOS.
+
+* Full Documentation: [Disk Utility.docx][fulldocs].
+* There are also [additional notes][notes] on disk image formats,
+  parameters, skew, etc.
+
+[fulldocs]: DiskUtility/Notes/Disk%20Utility.docx "How to use Disk Image Utility"
+[notes]: DiskUtility/Notes/ "Directory of miscellaneous documentation"
 
 ## File Conversion Notes
 
@@ -18,7 +25,15 @@ Disk Image Utility can also create blank disk images in several CP/M, HDOS, and 
 * IMG conversion to IMD keeps skew = 1
 * IMD conversion to IMG changes skew to 1
 
-# Change Log
+## How to Install
+
+There is no need to do anything special unless you are using a GNU/Linux computer, in which case:
+
+  * Install Mono if you don't have it already.<br/>`apt install mono-runtime`
+  * Make sure DiskUtility.exe is executable.<br/>`chmod +x DiskUtility.exe`
+  * Move the executable to a directory in your PATH with the name "diu".<br/>`mv DiskUtility.exe /usr/local/bin/diu`
+
+## Change Log
 - 1.1e
   * Added code for Livingston Logic Labs for H8D
   * Added IMG to IMD conversion
