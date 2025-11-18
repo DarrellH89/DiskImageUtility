@@ -78,6 +78,12 @@ There is no need to do anything special unless you are using a GNU/Linux compute
 *	2.0
     *	Change IMD to IMG conversion to allow for SPT changes on different tracks
     *	Corrected bug on RC2014 disk creation where the create function wasn’t called
-    
-
+*	2.1, 2.2
+    *	Added 1,440k format for RC2014
+    *	Corrected HDOS date format updates in the directory to match Stan Webb’s Y2K format.
+         Year 00-99   Mon 1-12  Day 1-31
+        15-----------9 8------5      4--------0
+         |       7-bits     | 4-bits  |     5-bits |
+*	2.3
+    *	Support for running under Linux. Thanks hackerb9!
 
