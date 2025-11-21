@@ -82,7 +82,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 2.3 (18 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 2.4 (20 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             FileViewerBorder = new GroupBox();
@@ -398,9 +398,9 @@ namespace DiskUtility
                     ProcessFileHdos(disk_name); // process HDOS files
 
                     }
-            else if (lb.ToString().Contains(".DOS")) 
+            else if (lb.ToString().ToUpper().Contains(".DOS")) 
                         ProcessFileDOS(disk_name);  // check for Z100 MS-DOS first
-                    else if (lb.ToString().Contains(".IMD"))   // assumes CP/M
+                    else if (lb.ToString().ToUpper().Contains(".IMD"))   // assumes CP/M
                         ProcessFileImd(disk_name);
                     else
                         ProcessFileH37(disk_name);    // process CP/M files
@@ -422,9 +422,9 @@ namespace DiskUtility
                     listBoxFiles.Items.Add(lb.ToString());
                     if (IsHDOSDisk(ref tempBuf))
                         ProcessFileHdos(disk_name);    // process HDOS files
-                    else if (lb.ToString().Contains(".DOS."))
+                    else if (lb.ToString().ToUpper().Contains(".DOS."))
                         ProcessFileDOS(disk_name); // check for Z100 MS-DOS first
-                    else if (lb.ToString().Contains(".IMD"))
+                    else if (lb.ToString().ToUpper().Contains(".IMD"))
                         ProcessFileImd(disk_name);
                     else
                         ProcessFileH37(disk_name); // process CP/M files

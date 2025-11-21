@@ -71,6 +71,7 @@ namespace CPM
         // 0.Disk type, 1.Allocation block size, 2.Directory start, 3.Allocation block byte size, 4.dir size, 5.interleave,
         // 6.Sectors per Track, 7.Sector Size, 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
         // MAKE SURE TO UPDATE filecreate() calls in Form5 if the table length changes
+        // LAST TWO ENTRIES MUST BE 100K H17 types
 
         public int[,] DiskType =
         {
@@ -82,10 +83,12 @@ namespace CPM
             {0x67, 0x800, 0x2800, 1, 0x2000, 3, 5, 0x400, 40, 2, 4}, //   4 400k H37 48tpi ED DS
             {0x23, 0x800, 0x2000, 1, 0x2000, 1, 8, 0x200, 40, 2, 0}, //   5 320k Z100 48tpi DD DS
             {0x62, 0x400, 0x2000, 1, 0x1000, 3, 16, 0x100, 40, 1, 12}, // 6 160k H37 48tpi DD SS 2=1000
-            {0x63, 0x800, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   7 320k H37 48tpi DD DS
-            {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   8 100k H37 48tpi DD SS
-            {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   9 100k Default H17 48tpi SD SS
-            {0x00, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   10 100k Default H17 48tpi SD SS
+            {0x63, 0x400, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   7 320k H37 48tpi DD DS
+            {0x00, 0x1000, 0x6000, 1, 0x1000, 1, 8, 0x200, 40, 2, 0 },    // 8 320k NCR CP/M
+            {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   9 100k H37 48tpi DD SS
+            {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   10 100k Default H17 48tpi SD SS
+            {0x00, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   11 100k Default H17 48tpi SD SS
+
 
         };
 
@@ -1140,25 +1143,29 @@ namespace CPM
         public int DiskTypeCheck(ref byte[] buffer, int filelen, bool isImg)
         {
             var ctr = 0;
-      
+                 var tsizebuff = buffer[5] ;
+
+                    var tt1 = buffer[0x0a];
+                    var tt2 = buffer[0x05];
+                var tt3 = DiskType.GetLength(0);     
             for (; ctr < DiskType.GetLength(0); ctr++) // search DiskType array for to match disk size with buffer size
             {
-                var tsizebuff = buffer[5] ;
-                    var tsize = DiskType[ctr, 0];
-                    var diskLen = DiskType[ctr, 6] * DiskType[ctr, 7] * DiskType[ctr, 8] * DiskType[ctr, 9];
-                    if ((filelen == diskLen)|| filelen == diskLen+32)       // allows for H37 format
-                    {
-                        if (buffer[5] == DiskType[ctr, 0])
-                            break;
-                        if (filelen == 1474560)     // assume small Z80 disk
-                            break;
-                        if (filelen == 737280)     // assume RC2014 disk
-                            break;
-                } 
-               
-                 
-            }
+                var ttype = DiskType[ctr, 0];               // Heathkit disk type
+                var diskLen = DiskType[ctr, 6] * DiskType[ctr, 7] * DiskType[ctr, 8] * DiskType[ctr, 9]; // Calculate Disk size from parameter table
 
+                if ((filelen == diskLen) || filelen == diskLen + 32)       // allows for H37 format
+                {
+                    if (buffer[5] == DiskType[ctr, 0])
+                        break;
+                    if (filelen == 1474560)     // assume small Z80 disk
+                        break;
+                    if (filelen == 737280)     // assume RC2014 disk
+                        break;
+                } 
+            }
+            if ((ctr + 1) > DiskType.GetLength(0) && filelen == 327680)   // NCR Disk Test. Didn't find a Heathkit match
+                if (buffer[0x0a] == 0x4e && buffer[0x0b] == 'C')
+                    ctr = 8; // NCR disk type
             if (filelen < 102500) // Smallest H37 formats
             {
                 // check if disk type value matches. If not, most likely an H8D disk
