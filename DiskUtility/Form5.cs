@@ -242,7 +242,7 @@ namespace DiskUtility
             //foreach(var lb in listBox1.SelectedItems)
             var lb = listBox1.SelectedItem;
             {
-                path = tbFolder.Text + "/" + lb.ToString();
+                path = tbFolder.Text + "\\" + lb.ToString();
                 if (path.Contains(".DOS.IMG"))
                     fileCreateDos(0, path);
                 else

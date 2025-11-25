@@ -616,7 +616,7 @@ namespace CPM
                         if (fcPtr == 12)
                         {
                             var t = fn.ToString();
-                            MessageBox.Show("File already in Directory. Skipping", fn.ToString(), MessageBoxButtons.OK);
+                            MessageBox.Show("File already in Directory. Skipping", t, MessageBoxButtons.OK);
                             return 0;
                         }
 
@@ -890,8 +890,8 @@ namespace CPM
                     var t2 = dirStart;
                     var t3 = t + t1 + t2;
                     bufPtr = dirStart + i / spt * sectorSize * spt + skewMap[i % spt] * sectorSize;
-                    if (ncrFlag)
-                        bufPtr = bufPtr * 2;
+                    //if (ncrFlag)
+                    //    bufPtr = bufPtr +dirStart;
                     //bufPtr = dirStart + i  * sectorSize ;
                     for (var dirPtr = 0; dirPtr < sectorSize; dirPtr += 32) // loop through sector checking DIR entries
                         if (buf[bufPtr + dirPtr] != 0xe5)
@@ -1027,15 +1027,19 @@ namespace CPM
                                 var tracks = (dirStart + sectOffset) / (spt * sectorSize);
                                 var baseSect = (dirStart + sectOffset - tracks * (spt * sectorSize)) / sectorSize;
                                 var temp2 = skewMap[sectOffset % spt];
+                                var temp3 = sectOffset / spt * sectorSize * spt;
                                 rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
-                                if(ncrFlag)
-                                {
-                                    if (tracks < numTrack)    // NCR Deskmate tracks sequential not interleaved (e.g. trackws 0-39 on side one, 40-= 79 on side 2)
-                                        tracks = tracks * 2;
-                                    else
-                                        tracks = (tracks - numTrack/2) * 2 + 1;
-                                    rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
-                                }
+                                //if(ncrFlag)
+                                //{
+                                //    tracks = rBptr / (spt * sectorSize);
+                                //    if (tracks < numTrack)    // NCR Deskmate tracks sequential not interleaved (e.g. trackws 0-39 on side one, 40-= 79 on side 2)
+                                //        rBptr = rBptr * 2;
+                                //    else
+                                //        rBptr  = (rBptr - (40*spt* sectorSize)) * 2 + spt*sectorSize;
+
+
+                                //   // rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
+                                //}
                                 // + (sectOffset % spt) * sectorSize;
                                 var j = 0;
                                 for (; j < sectorSize / 128 && j < fcbNum; j++)
@@ -1182,7 +1186,24 @@ namespace CPM
                 {
                     ctr = 8; // NCR disk type
                     ncrFlag = true;
- 
+                    // Reorder buffer from interleaved tracks to sequential tracks
+                    var tbuf = buffer;                      // temp copy of buffer
+                    var trkSize = DiskType[ctr, 6] * DiskType[ctr, 7];          // # bytes in a track
+                    var totalTrack = DiskType[ctr, 8] * DiskType[ctr, 9];        // # of tracks
+                    var tbufPtr = 0;
+                    var buffPtr1 = 0;
+                    var buffPtr2 = trkSize * DiskType[ctr, 8];
+
+                    for (var j = 0; j < totalTrack; j++)
+                    {
+                        Array.Copy(tbuf, tbufPtr, buffer, buffPtr1, trkSize);
+                        tbufPtr += trkSize;
+                        Array.Copy(tbuf, tbufPtr, buffer, buffPtr2, trkSize);
+                        tbufPtr += trkSize;
+                        buffPtr1 += trkSize;
+                        buffPtr2 += trkSize;
+
+                    }
                 }
             if (filelen < 102500) // Smallest H37 formats
             {
