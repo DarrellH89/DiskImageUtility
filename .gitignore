@@ -3,4 +3,4 @@ DiskUtility/obj/*
 DiskUtility/bin/debug/*
 DiskUtility/bin/release/*.*
 DiskImageUtility.sln.DotSettings.user
-
+DiskUtility/ncr/*

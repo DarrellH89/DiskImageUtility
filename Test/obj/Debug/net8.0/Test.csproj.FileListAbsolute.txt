@@ -1,0 +1,15 @@
+G:\Dev\Github\DiskImageUtility\Test\bin\Debug\net8.0\Test.exe
+G:\Dev\Github\DiskImageUtility\Test\bin\Debug\net8.0\Test.deps.json
+G:\Dev\Github\DiskImageUtility\Test\bin\Debug\net8.0\Test.runtimeconfig.json
+G:\Dev\Github\DiskImageUtility\Test\bin\Debug\net8.0\Test.dll
+G:\Dev\Github\DiskImageUtility\Test\bin\Debug\net8.0\Test.pdb
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.GeneratedMSBuildEditorConfig.editorconfig
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.AssemblyInfoInputs.cache
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.AssemblyInfo.cs
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.csproj.CoreCompileInputs.cache
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.sourcelink.json
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.dll
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\refint\Test.dll
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.pdb
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\Test.genruntimeconfig.cache
+G:\Dev\Github\DiskImageUtility\Test\obj\Debug\net8.0\ref\Test.dll

@@ -84,7 +84,7 @@ namespace CPM
             {0x23, 0x800, 0x2000, 1, 0x2000, 1, 8, 0x200, 40, 2, 0}, //   5 320k Z100 48tpi DD DS
             {0x62, 0x400, 0x2000, 1, 0x1000, 3, 16, 0x100, 40, 1, 12}, // 6 160k H37 48tpi DD SS 2=1000
             {0x63, 0x400, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   7 320k H37 48tpi DD DS
-            {0x00, 0x1000, 0x6000, 1, 0x1000, 1, 8, 0x200, 40, 2, 0 },    // 8 320k NCR CP/M
+            {0x00, 0x400, 0x3000, 1, 0x1000, 2, 8, 0x200, 40, 2, 0 },    // 8 320k NCR CP/M
             {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   9 100k H37 48tpi DD SS
             {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   10 100k Default H17 48tpi SD SS
             {0x00, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   11 100k Default H17 48tpi SD SS
@@ -107,7 +107,7 @@ namespace CPM
         private byte[] fnameb;
         private bool readOnly; // Read only file
         private bool sys; // system file
-        private bool chg; // disk changed - not used
+        private bool ncrFlag = false; // NCR disk flag
         private uint fsize; // file size 
         private List<FCBlist> FCBfirst;
 
@@ -196,7 +196,7 @@ namespace CPM
             fnameb = new byte[11] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             readOnly = false;
             sys = false;
-            chg = false;
+            ncrFlag = false;
             FCBfirst = new List<FCBlist>();
         }
 
@@ -836,8 +836,8 @@ namespace CPM
                 numHeads = DiskType[ctr, 9];
                 diskSize = numTrack * numHeads * spt * sectorSize / 1024;
                 dirSectStart = dirStart / sectorSize;
-                if (diskFileName.EndsWith(".IMG"))     // Check if disk type is in first physical sector
-                {
+                if (diskFileName.ToUpper().EndsWith(".IMG"))     // Check if disk type is in first physical sector
+                {                                       // Could be an issue, maybe not for just DIR read
                     sptStart = 0;
                     intLv = 1;
                 }
@@ -879,13 +879,19 @@ namespace CPM
                 // Read Dir .IMG files are in sector number order, not skewed
                 var diskUsed = 0;
                 var skewMap = BuildSkew(intLv, spt, sptStart);
+                // debug
+
+                var cnt = 0;
+                // end debug
                 for (var i = 0; i < dirSize / sectorSize; i++) // loop through # sectors in directory
                 {
-                    var t = skewMap[i % spt] * 512;
+                    var t = skewMap[i % spt] * sectorSize;
                     var t1 = i / spt * sectorSize * spt;
                     var t2 = dirStart;
                     var t3 = t + t1 + t2;
                     bufPtr = dirStart + i / spt * sectorSize * spt + skewMap[i % spt] * sectorSize;
+                    if (ncrFlag)
+                        bufPtr = bufPtr * 2;
                     //bufPtr = dirStart + i  * sectorSize ;
                     for (var dirPtr = 0; dirPtr < sectorSize; dirPtr += 32) // loop through sector checking DIR entries
                         if (buf[bufPtr + dirPtr] != 0xe5)
@@ -900,6 +906,7 @@ namespace CPM
 
                             // get file name in both string and byte format
                             var UserArea = buf[bufPtr + dirPtr];
+                            cnt++;
                             var fnameStr = encoding.GetString(buf, bufPtr + dirPtr +1, 11);
                             var fileDirSize = 0;
                             var temp = new DirList(fnameStr, fileDirSize, flagStr, UserArea); // temp storage
@@ -939,7 +946,6 @@ namespace CPM
                                 fileNameList.Add(temp);
                             }
                         }
-
                     fileNameList.Sort();
                 }
             }
@@ -1022,6 +1028,14 @@ namespace CPM
                                 var baseSect = (dirStart + sectOffset - tracks * (spt * sectorSize)) / sectorSize;
                                 var temp2 = skewMap[sectOffset % spt];
                                 rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
+                                if(ncrFlag)
+                                {
+                                    if (tracks < numTrack)    // NCR Deskmate tracks sequential not interleaved (e.g. trackws 0-39 on side one, 40-= 79 on side 2)
+                                        tracks = tracks * 2;
+                                    else
+                                        tracks = (tracks - numTrack/2) * 2 + 1;
+                                    rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
+                                }
                                 // + (sectOffset % spt) * sectorSize;
                                 var j = 0;
                                 for (; j < sectorSize / 128 && j < fcbNum; j++)
@@ -1164,8 +1178,12 @@ namespace CPM
                 } 
             }
             if ((ctr + 1) > DiskType.GetLength(0) && filelen == 327680)   // NCR Disk Test. Didn't find a Heathkit match
-                if (buffer[0x0a] == 0x4e && buffer[0x0b] == 'C')
+                if (buffer[0x0a] == 0x4e && buffer[0x0b] == 'C' && buffer[0x0c] == 'R')
+                {
                     ctr = 8; // NCR disk type
+                    ncrFlag = true;
+ 
+                }
             if (filelen < 102500) // Smallest H37 formats
             {
                 // check if disk type value matches. If not, most likely an H8D disk
