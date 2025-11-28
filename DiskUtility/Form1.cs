@@ -26,6 +26,8 @@ namespace DiskUtility
         public static string options = "";
         public static string addFilesLoc = "";
 
+        DiuUserSettings userSettings;
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         
         /*
@@ -84,6 +86,8 @@ namespace DiskUtility
             labelVersion.Text =
                 "Version 2.3 (18 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
+
+            userSettings = new DiuUserSettings();
 
             FileViewerBorder = new GroupBox();
             FileViewerBorder.Size = new Size(720, 580);
@@ -204,38 +208,25 @@ namespace DiskUtility
 
         private void ReadData()
         {
-            if (File.Exists("DiskUtility.dat"))
-            {
-                var stream = File.OpenText("DiskUtility.dat");
-                if (stream != null)
-                {
-                    folderBrowserDialog2.SelectedPath = stream.ReadLine();
-                    options = stream.ReadLine();
-                    if (options == null)
-                        options = " ";
-                    addFilesLoc = stream.ReadLine();
-                    if (addFilesLoc == null)
-                        addFilesLoc = folderBrowserDialog2.SelectedPath;
-                    stream.Close();
-                }
-
-                if (options.Contains("T"))
-                    btnOption.Text = "Text Trunc On";
-                else
-                    btnOption.Text = "Text Trunc Off";
-            }
+            // Read existing user settings (if any)
+            folderBrowserDialog2.SelectedPath = userSettings.SelectedPath;
+            if (folderBrowserDialog2.SelectedPath == "")
+                folderBrowserDialog2.SelectedPath = System.IO.Directory.GetCurrentDirectory();
+            options = userSettings.options;
+            if (options == "")
+                options = " ";
+            addFilesLoc = userSettings.addFilesLoc;
+            if (addFilesLoc == "")
+                addFilesLoc = folderBrowserDialog2.SelectedPath;
         }
 
         private void SaveData()
         {
-            var stream = File.CreateText("DiskUtility.dat");
-            if (stream != null)
-            {
-                stream.WriteLine(folderBrowserDialog2.SelectedPath);
-                stream.WriteLine(options);
-                stream.WriteLine(addFilesLoc);
-                stream.Close();
-            }
+            // Save changed settings.
+            userSettings.SelectedPath = folderBrowserDialog2.SelectedPath;
+            userSettings.options = options;
+            userSettings.addFilesLoc = addFilesLoc;
+            userSettings.Save();
         }
 
         private void BtnFolder_Click(object sender, EventArgs e)
