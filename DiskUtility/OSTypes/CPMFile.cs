@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -27,6 +29,8 @@ namespace CPM
         /********** data values for reading .IMD disks       */
         private const int bufferSize = 160*512*18+ 1024;
         public byte[] buf = new byte[bufferSize];
+        public bool ncrFlag = false; // NCR disk flag
+        public bool ncrFlagDirty = false;      //Disk image file was de-interleaved
         //public string addFilename = "";
         private const int sectorMax = 18 * 160; // max number of tracks
 
@@ -39,17 +43,16 @@ namespace CPM
         private string DiskImageImdActive = "";
         private long diskSize = 0;
 
-        private int diskType = 0,
-            //bufPtr = 0,
-            dirStart = 0,
+        private int diskType = 0,           // Heathkit disk type in byte[5] of sector 0
+            dirStart = 0,                   
             dirSize = 0,
             intLv = 0,
-            spt = 0,
+            spt = 0,                        // sectors per track
             sectorSize = 0,
             numTrack = 0,
             numHeads =0,
-            sptStart = 0;
-    
+            sptStart = 0;                   // First sector on track (0 based)
+
 
         public List<DirList> fileNameList = new List<DirList>();
 
@@ -72,6 +75,8 @@ namespace CPM
         // 6.Sectors per Track, 7.Sector Size, 8.# Tracks, 9. # heads, 10 Skew Start Sector (0 based)
         // MAKE SURE TO UPDATE filecreate() calls in Form5 if the table length changes
         // LAST TWO ENTRIES MUST BE 100K H17 types
+        // type 0x43 is reserved for NCR CP/M disks, currently row 8
+
 
         public int[,] DiskType =
         {
@@ -84,7 +89,7 @@ namespace CPM
             {0x23, 0x800, 0x2000, 1, 0x2000, 1, 8, 0x200, 40, 2, 0}, //   5 320k Z100 48tpi DD DS
             {0x62, 0x400, 0x2000, 1, 0x1000, 3, 16, 0x100, 40, 1, 12}, // 6 160k H37 48tpi DD SS 2=1000
             {0x63, 0x400, 0x2000, 1, 0x2000, 3, 16, 0x100, 40, 2, 4}, //   7 320k H37 48tpi DD DS
-            {0x00, 0x400, 0x3000, 1, 0x1000, 2, 8, 0x200, 40, 2, 0 },    // 8 320k NCR CP/M
+            {0x43, 0x800, 0x3000, 1, 0x1000, 2, 8, 0x200, 40, 2, 0 },    // 8 320k NCR CP/M
             {0x60, 0x400, 0x1e00, 1, 0x800, 3, 10, 0x100, 40, 1, 0}, //   9 100k H37 48tpi DD SS
             {0xE5, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   10 100k Default H17 48tpi SD SS
             {0x00, 0x400, 0x1e00, 1, 0x800, 4, 10, 0x100, 40, 1, 0}, //   11 100k Default H17 48tpi SD SS
@@ -107,7 +112,6 @@ namespace CPM
         private byte[] fnameb;
         private bool readOnly; // Read only file
         private bool sys; // system file
-        private bool ncrFlag = false; // NCR disk flag
         private uint fsize; // file size 
         private List<FCBlist> FCBfirst;
 
@@ -197,6 +201,7 @@ namespace CPM
             readOnly = false;
             sys = false;
             ncrFlag = false;
+            ncrFlagDirty = false;
             FCBfirst = new List<FCBlist>();
         }
 
@@ -359,7 +364,7 @@ namespace CPM
                     result = 0;
                 }
 
-                var t0 = 0;
+                //var t0 = 0;
                 if (result == 1) // done error checking, read directory
                 {
                     // Read Dir
@@ -548,7 +553,7 @@ namespace CPM
         // ************** Insert File CP/M *********************
         /*
          * Directory entries are written sequentially
-         * buf = destination file image buffer
+         * buf = global destination file image buffer
          * fileBuff = buffer of file to add to image
          * len = input file length
          * filename = CP/M filename
@@ -809,6 +814,23 @@ namespace CPM
                 bufPtr = 0;
           
             ctr = DiskTypeCheck(ref buf, fileLen, diskFileName.ToUpper().EndsWith("IMG"));
+            // Debug
+            // var path = "C:\\Temp\\NCRDiskb.img";
+            //try
+            //{
+            //    FileStream fsOut = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+            //    BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
+            //    fileOutBytes.Seek(0, SeekOrigin.Current);
+            //    fileOutBytes.Write(buf, 0, fileLen);
+            //    fileOutBytes.Close();
+            //    fsOut.Dispose();
+            //}
+            //catch
+            //{
+            //    MessageBox.Show("Error writing temp NCR disk image", "Error", MessageBoxButtons.OK);
+            //}
+            // End Debug
+
             // if (diskType == DiskType[ctr, 0] || ctr == DiskType.GetLength(0) - 1)
             // H8D LLL disk check
             bool H8dLLL = false;
@@ -957,7 +979,7 @@ namespace CPM
         public int ExtractFileCPM(Form1.DiskFileEntry disk_file_entry, ref int txtFile)
         {
             var result = 1; // assume success
-            var maxBuffSize = 0x2000; // largest allocation block size
+            //var maxBuffSize = 0x2000; // largest allocation block size
             var diskTotal = 0;
             var userArea = 0;
 
@@ -1004,7 +1026,7 @@ namespace CPM
             var skewMap = BuildSkew(intLv, spt, sptStart);
 
             // Find filename in DIRList
-            var obj = fileNameList.FirstOrDefault(x => x.fname == disk_file_entry.FileName);
+                var obj = fileNameList.FirstOrDefault(x => x.fname == disk_file_entry.FileName);
             if (obj != null)
             {
                 var rBptr = 0; // read buffer ptr
@@ -1019,7 +1041,7 @@ namespace CPM
                     for (var i = 0; i < 16; i++)    // up to 16 FCBs per directory entry
                         if (f.fcb[i] > 0) // allocation block to get
                         {
-                            var temp1 = f.fcb[i];
+                            var temp1 = f.fcb[i];           // debug
                             for (var k = 0; k < albSize / sectorSize; k++) // read the sectors in the allocation block
                             {
                                 //GetALB(ref buff, 0, bin_file, f.fcb[i], dirStart, allocBlock, sectorSize, spt, skewMap);
@@ -1029,19 +1051,8 @@ namespace CPM
                                 var temp2 = skewMap[sectOffset % spt];
                                 var temp3 = sectOffset / spt * sectorSize * spt;
                                 rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
-                                //if(ncrFlag)
-                                //{
-                                //    tracks = rBptr / (spt * sectorSize);
-                                //    if (tracks < numTrack)    // NCR Deskmate tracks sequential not interleaved (e.g. trackws 0-39 on side one, 40-= 79 on side 2)
-                                //        rBptr = rBptr * 2;
-                                //    else
-                                //        rBptr  = (rBptr - (40*spt* sectorSize)) * 2 + spt*sectorSize;
 
-
-                                //   // rBptr = dirStart + sectOffset / spt * sectorSize * spt + skewMap[sectOffset % spt] * sectorSize;
-                                //}
-                                // + (sectOffset % spt) * sectorSize;
-                                var j = 0;
+                                    var j = 0;
                                 for (; j < sectorSize / 128 && j < fcbNum; j++)
                                     for (var l = 0; l < 128; l++)
                                         wBuff[wBptr++] = buf[rBptr++];
@@ -1157,6 +1168,8 @@ namespace CPM
         }
         //****************** Disk Type Check *****************
         // checks for CP/M disk type
+        // returns index to DiskType array
+        // Sets NCR flags if NCR disk detected
 
         public int DiskTypeCheck(ref byte[] buffer, int filelen, bool isImg)
         {
@@ -1184,26 +1197,15 @@ namespace CPM
             if ((ctr + 1) > DiskType.GetLength(0) && filelen == 327680)   // NCR Disk Test. Didn't find a Heathkit match
                 if (buffer[0x0a] == 0x4e && buffer[0x0b] == 'C' && buffer[0x0c] == 'R')
                 {
+                    //********************
+                    // de-interleave the disk image bufer
+                    // set the ncrFlagDirty
+                    //*******************
+
                     ctr = 8; // NCR disk type
                     ncrFlag = true;
-                    // Reorder buffer from interleaved tracks to sequential tracks
-                    var tbuf = buffer;                      // temp copy of buffer
-                    var trkSize = DiskType[ctr, 6] * DiskType[ctr, 7];          // # bytes in a track
-                    var totalTrack = DiskType[ctr, 8] * DiskType[ctr, 9];        // # of tracks
-                    var tbufPtr = 0;
-                    var buffPtr1 = 0;
-                    var buffPtr2 = trkSize * DiskType[ctr, 8];
-
-                    for (var j = 0; j < totalTrack; j++)
-                    {
-                        Array.Copy(tbuf, tbufPtr, buffer, buffPtr1, trkSize);
-                        tbufPtr += trkSize;
-                        Array.Copy(tbuf, tbufPtr, buffer, buffPtr2, trkSize);
-                        tbufPtr += trkSize;
-                        buffPtr1 += trkSize;
-                        buffPtr2 += trkSize;
-
-                    }
+                    ncrFlagDirty = true;
+                    ncrSequential(ref buffer, ctr);                     // Reorder buffer from interleaved tracks to sequential tracks
                 }
             if (filelen < 102500) // Smallest H37 formats
             {
@@ -1228,18 +1230,19 @@ namespace CPM
             return ctr;
         }
 
-//******************** Build Skew *************************************
-// returns an integer array of size spt with the requested interleave intLv
-// array is in logical to physical format
-// logical sector is array index, value is physical order
-// start is starting array location from 0
-    public int[] BuildSkew(int intLv, int spt, int start)
+
+        //******************** Build Skew *************************************
+        // returns an integer array of size spt with the requested interleave intLv
+        // array is in logical to physical format
+        // logical sector is array index, value is physical order
+        // start is starting array location from 0
+        public int[] BuildSkew(int intLv, int spt, int start)
         {
             var physicalS = start;
             var logicalS = 0;
             var count = new int[spt];
             var skew = new int[spt];
-            var t = 0;
+           // var t = 0;
             // initialize table
             for (var i = 0; i < spt; i++) // initialize skew table
             {
@@ -1265,13 +1268,94 @@ namespace CPM
             Array.Sort(skew, count); // sort both arrays using skew values and return count array for offset
             return count;
         }
-        //
-    //**************************** Get Spt Start ***********************
-    // returns private value sptStart
+
+        //**************************** Get Spt Start ***********************
+        // returns private value sptStart
         public int GetSptStart()
         {
-        return sptStart;
+            return sptStart;
         }
+
+        //********************* NCR Interleave *********************************
+        // Converts NCR Sequential format of 0-39 head 0, then 0-39 head 1 to standard interleaved image
+        // Converts data in buf[]
+
+        public void ncrInterleaved(ref byte[] bf)
+        {
+            var tbuf = new byte[bf.Length];                     // temp copy of buffer
+            var trkSize = sectorSize * spt;          // # bytes in a track
+            var tbufPtr = 0;
+            var bfPtr1 = 0;
+            var bfPtr2 = trkSize * numTrack; // Half way point in image
+
+            //for(var j = 0; j < buffer.Length; j++)
+            //    buffer[j] = 0; // clear buffer  
+            System.Diagnostics.Debug.WriteLine("NCR Interleaved started");
+            ncrFlagDirty = false;
+            for (var j = 0; j < numTrack; j++)
+            {
+                Array.Copy(bf, bfPtr1, tbuf, tbufPtr, trkSize);
+                tbufPtr += trkSize;
+                Array.Copy(bf, bfPtr2, tbuf, tbufPtr, trkSize);
+                tbufPtr += trkSize;
+                //if (tbufPtr > 0x4000) break; // debug
+                bfPtr1 += trkSize;
+                bfPtr2 += trkSize;
+            }
+            bf = tbuf;          // update buffer with interleaved data
+        }
+        //********************* NCR Sequential *********************************
+        // Converts standard interleaved image to NCR Sequential format of 0-39 head 0, then 0-39 head 1
+        // Converts data in buf[]
+        public void ncrSequential(ref byte[] bf, int disk)
+        {
+            var trkSize = DiskType[disk, 6] * DiskType[disk,7];
+            var tbuf = new byte[bf.Length];                     // temp copy of buffer
+            var bfPtr = 0;
+            var tbufPtr1 = 0;
+            var tbufPtr2 = trkSize * DiskType[disk,8]; // set to half way point in image
+
+            System.Diagnostics.Debug.WriteLine("NCR Sequential started");
+            ncrFlagDirty = true;
+            for (var j = 0; j < DiskType[disk,8]; j++)
+            {
+                Array.Copy(bf, bfPtr, tbuf, tbufPtr1, trkSize);
+                bfPtr += trkSize;
+                Array.Copy(bf, bfPtr, tbuf, tbufPtr2, trkSize);
+                bfPtr += trkSize;
+                //if (tbufPtr > 0x4000) break; // debug
+
+                tbufPtr1 += trkSize;
+                tbufPtr2 += trkSize;
+
+            }
+            bf = tbuf;          // update buffer with sequential data
+            DebugPrintBuffer(ref tbuf, trkSize * numTrack * 2, "NCRdisk_Seq.img" );
+        }
+
+        //******************** DebugPrintBuffer *************************************
+        // Prints buffer array to disk
+
+        public void DebugPrintBuffer(ref byte[] buffer, int bufSize, string fname)
+        {
+            // debug write temp disk image
+            var path = "C:\\Temp\\" + fname;
+            try
+            {
+                FileStream fsOut = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
+                BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
+                fileOutBytes.Seek(0, SeekOrigin.Current);
+                fileOutBytes.Write(buffer, 0, bufSize);
+                fileOutBytes.Close();
+                fsOut.Dispose();
+            }
+            catch
+            {
+                MessageBox.Show("Error writing temp disk image", "Error", MessageBoxButtons.OK);
+
+            }
+        }
+
     }
 
 }

@@ -53,6 +53,7 @@
             this.btnRC2014_720 = new System.Windows.Forms.Button();
             this.btnDOS_320 = new System.Windows.Forms.Button();
             this.btnRC2014_1440 = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonFolder
@@ -86,9 +87,9 @@
             // 
             // btnH8d100
             // 
-            this.btnH8d100.Location = new System.Drawing.Point(440, 173);
+            this.btnH8d100.Location = new System.Drawing.Point(440, 229);
             this.btnH8d100.Name = "btnH8d100";
-            this.btnH8d100.Size = new System.Drawing.Size(130, 23);
+            this.btnH8d100.Size = new System.Drawing.Size(130, 21);
             this.btnH8d100.TabIndex = 3;
             this.btnH8d100.Text = "H8D 100k";
             this.btnH8d100.UseVisualStyleBackColor = true;
@@ -96,9 +97,9 @@
             // 
             // btnH37_800
             // 
-            this.btnH37_800.Location = new System.Drawing.Point(440, 202);
+            this.btnH37_800.Location = new System.Drawing.Point(440, 198);
             this.btnH37_800.Name = "btnH37_800";
-            this.btnH37_800.Size = new System.Drawing.Size(130, 23);
+            this.btnH37_800.Size = new System.Drawing.Size(130, 21);
             this.btnH37_800.TabIndex = 5;
             this.btnH37_800.Text = "H37 80 trk 800k DS ED";
             this.btnH37_800.UseVisualStyleBackColor = true;
@@ -106,9 +107,9 @@
             // 
             // btnH37_640
             // 
-            this.btnH37_640.Location = new System.Drawing.Point(440, 231);
+            this.btnH37_640.Location = new System.Drawing.Point(440, 167);
             this.btnH37_640.Name = "btnH37_640";
-            this.btnH37_640.Size = new System.Drawing.Size(130, 23);
+            this.btnH37_640.Size = new System.Drawing.Size(130, 21);
             this.btnH37_640.TabIndex = 6;
             this.btnH37_640.Text = "H37 80 trk 640k DS DD";
             this.btnH37_640.UseVisualStyleBackColor = true;
@@ -146,7 +147,7 @@
             // 
             // btnSz80_1440
             // 
-            this.btnSz80_1440.Location = new System.Drawing.Point(440, 345);
+            this.btnSz80_1440.Location = new System.Drawing.Point(440, 434);
             this.btnSz80_1440.Name = "btnSz80_1440";
             this.btnSz80_1440.Size = new System.Drawing.Size(130, 21);
             this.btnSz80_1440.TabIndex = 11;
@@ -156,7 +157,7 @@
             // 
             // btnDOS_360
             // 
-            this.btnDOS_360.Location = new System.Drawing.Point(590, 345);
+            this.btnDOS_360.Location = new System.Drawing.Point(590, 347);
             this.btnDOS_360.Name = "btnDOS_360";
             this.btnDOS_360.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_360.TabIndex = 12;
@@ -166,7 +167,7 @@
             // 
             // btnDOS_720
             // 
-            this.btnDOS_720.Location = new System.Drawing.Point(590, 372);
+            this.btnDOS_720.Location = new System.Drawing.Point(590, 376);
             this.btnDOS_720.Name = "btnDOS_720";
             this.btnDOS_720.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_720.TabIndex = 13;
@@ -176,7 +177,7 @@
             // 
             // btnH37_100
             // 
-            this.btnH37_100.Location = new System.Drawing.Point(440, 318);
+            this.btnH37_100.Location = new System.Drawing.Point(440, 405);
             this.btnH37_100.Name = "btnH37_100";
             this.btnH37_100.Size = new System.Drawing.Size(130, 21);
             this.btnH37_100.TabIndex = 14;
@@ -186,7 +187,7 @@
             // 
             // btnDOS_1440
             // 
-            this.btnDOS_1440.Location = new System.Drawing.Point(590, 399);
+            this.btnDOS_1440.Location = new System.Drawing.Point(590, 405);
             this.btnDOS_1440.Name = "btnDOS_1440";
             this.btnDOS_1440.Size = new System.Drawing.Size(130, 21);
             this.btnDOS_1440.TabIndex = 15;
@@ -196,7 +197,7 @@
             // 
             // btnZ100_320
             // 
-            this.btnZ100_320.Location = new System.Drawing.Point(440, 372);
+            this.btnZ100_320.Location = new System.Drawing.Point(440, 376);
             this.btnZ100_320.Name = "btnZ100_320";
             this.btnZ100_320.Size = new System.Drawing.Size(130, 21);
             this.btnZ100_320.TabIndex = 16;
@@ -206,7 +207,7 @@
             // 
             // btnH37_320
             // 
-            this.btnH37_320.Location = new System.Drawing.Point(440, 287);
+            this.btnH37_320.Location = new System.Drawing.Point(440, 347);
             this.btnH37_320.Name = "btnH37_320";
             this.btnH37_320.Size = new System.Drawing.Size(130, 21);
             this.btnH37_320.TabIndex = 17;
@@ -216,9 +217,9 @@
             // 
             // btnH80_640
             // 
-            this.btnH80_640.Location = new System.Drawing.Point(588, 173);
+            this.btnH80_640.Location = new System.Drawing.Point(588, 167);
             this.btnH80_640.Name = "btnH80_640";
-            this.btnH80_640.Size = new System.Drawing.Size(149, 23);
+            this.btnH80_640.Size = new System.Drawing.Size(130, 21);
             this.btnH80_640.TabIndex = 18;
             this.btnH80_640.Text = "HDOS 80 trk 640k  DS DD";
             this.btnH80_640.UseVisualStyleBackColor = true;
@@ -226,9 +227,9 @@
             // 
             // btnH40_400
             // 
-            this.btnH40_400.Location = new System.Drawing.Point(588, 202);
+            this.btnH40_400.Location = new System.Drawing.Point(588, 198);
             this.btnH40_400.Name = "btnH40_400";
-            this.btnH40_400.Size = new System.Drawing.Size(149, 21);
+            this.btnH40_400.Size = new System.Drawing.Size(130, 21);
             this.btnH40_400.TabIndex = 19;
             this.btnH40_400.Text = "HDOS 40 trk 320k DS DD";
             this.btnH40_400.UseVisualStyleBackColor = true;
@@ -238,7 +239,7 @@
             // 
             this.btnH40_100.Location = new System.Drawing.Point(588, 229);
             this.btnH40_100.Name = "btnH40_100";
-            this.btnH40_100.Size = new System.Drawing.Size(149, 21);
+            this.btnH40_100.Size = new System.Drawing.Size(130, 21);
             this.btnH40_100.TabIndex = 20;
             this.btnH40_100.Text = "HDOS 40 trk 100k SS SD";
             this.btnH40_100.UseVisualStyleBackColor = true;
@@ -276,7 +277,7 @@
             // 
             // btnRC2014_720
             // 
-            this.btnRC2014_720.Location = new System.Drawing.Point(440, 399);
+            this.btnRC2014_720.Location = new System.Drawing.Point(440, 318);
             this.btnRC2014_720.Name = "btnRC2014_720";
             this.btnRC2014_720.Size = new System.Drawing.Size(130, 21);
             this.btnRC2014_720.TabIndex = 24;
@@ -296,7 +297,7 @@
             // 
             // btnRC2014_1440
             // 
-            this.btnRC2014_1440.Location = new System.Drawing.Point(440, 432);
+            this.btnRC2014_1440.Location = new System.Drawing.Point(440, 289);
             this.btnRC2014_1440.Name = "btnRC2014_1440";
             this.btnRC2014_1440.Size = new System.Drawing.Size(130, 21);
             this.btnRC2014_1440.TabIndex = 26;
@@ -304,11 +305,22 @@
             this.btnRC2014_1440.UseVisualStyleBackColor = true;
             this.btnRC2014_1440.Click += new System.EventHandler(this.btnRC2014_1440_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(440, 463);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(130, 21);
+            this.button1.TabIndex = 27;
+            this.button1.Text = "NCR 320K";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.btnNCR_320);
+            // 
             // Form5
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 557);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.btnRC2014_1440);
             this.Controls.Add(this.btnDOS_320);
             this.Controls.Add(this.btnRC2014_720);
@@ -368,5 +380,6 @@
         private System.Windows.Forms.Button btnRC2014_720;
         private System.Windows.Forms.Button btnDOS_320;
         private System.Windows.Forms.Button btnRC2014_1440;
+        private System.Windows.Forms.Button button1;
     }
     }

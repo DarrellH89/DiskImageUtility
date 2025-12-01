@@ -1258,10 +1258,10 @@ namespace DiskUtility
                     foreach (DiskFileEntry entry in DiskFileList)
                         if (entry.ListBox2Entry == idx)
                         {
-                            if (entry.DiskImageName.Contains(".IMD"))
+                            if (entry.DiskImageName.ToUpper().Contains(".IMD"))
                                 //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
                                 files_extracted += getCpmFile.ExtractFileCPMImd(entry);
-                            else if (entry.DiskImageName.Contains(".DOS"))
+                            else if (entry.DiskImageName.ToUpper().Contains(".DOS"))
                                 files_extracted += ExtractDosFile(entry);
                             else if(entry.fileType == "CPM")
                                  files_extracted += ExtractCpmFile(entry, ref txtCnt);
@@ -1281,10 +1281,10 @@ namespace DiskUtility
                     foreach (DiskFileEntry entry in DiskFileList)
                     {
                         // dcp changed Extract file to return 1 if successful
-                        if (entry.DiskImageName.Contains(".IMD"))
+                        if (entry.DiskImageName.ToUpper().Contains(".IMD"))
                             //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
                             files_extracted += getCpmFile.ExtractFileCPMImd(entry);
-                        else if (entry.DiskImageName.Contains(".DOS"))
+                        else if (entry.DiskImageName.ToUpper().Contains(".DOS"))
                             files_extracted += ExtractDosFile(entry);
                         else if (entry.fileType == "CPM")
                             files_extracted += ExtractCpmFile(entry, ref txtCnt);

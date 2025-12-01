@@ -233,6 +233,10 @@ namespace DiskUtility
         {
             fileCreate(0, "");
         }
+        private void btnNCR_320(object sender, EventArgs e)
+        {
+            fileCreate(8, "");
+        }
         /******************* List Box 1 Double Click ********************/
         /* opens selected disk image file to add files */
 
@@ -242,7 +246,7 @@ namespace DiskUtility
             //foreach(var lb in listBox1.SelectedItems)
             var lb = listBox1.SelectedItem;
             {
-                path = tbFolder.Text + "\\" + lb.ToString();
+                path = tbFolder.Text + "/" + lb.ToString();  // use 2 backslash for compatibility with Linux
                 if (path.Contains(".DOS.IMG"))
                     fileCreateDos(0, path);
                 else
@@ -337,7 +341,6 @@ namespace DiskUtility
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
             openFileDialog1.FileName = "";
-            string temp = "";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 var results = Globals.Results.Success;
@@ -375,7 +378,7 @@ namespace DiskUtility
 
         /******************** File Create File for CP/M *******************************/
             /* Input disk type - really the index to the to the CP/M file type data array
-
+               Requ9ires update if DiskType table has rows added
              */
             private void fileCreate(int diskType, string fileName)
             {
@@ -387,7 +390,8 @@ namespace DiskUtility
             if (path.Length == 0) // Create disk image if no path provided
                 {
                 openFileDialog1.InitialDirectory = tbFolder.Text;
-                if (diskType > 7)
+                // Update DiskTypoe Row marker for DiskTypoe table changes
+                if (diskType > 9)
                     openFileDialog1.Filter = "H8D Files (*.H8D)|*.H8D";
                 else
                     openFileDialog1.Filter = "CP/M files (*.IMG)|*.IMG";
@@ -417,9 +421,9 @@ namespace DiskUtility
                 var cpmBuf = new byte[diskTotalBytes];
                 for (var i = 0; i < diskTotalBytes; i++)
                     cpmBuf[i] = 0xE5;
+                
                 cpmBuf[getCpm.H37disktype] = (byte)getCpm.DiskType[diskType, 0]; // set disk type marker
-
-                switch (cpmBuf[getCpm.H37disktype])
+                switch (cpmBuf[getCpm.H37disktype])                             // Also checks for NCR disk type 0x43
 
                     {
                     case 0x6f:
@@ -449,6 +453,14 @@ namespace DiskUtility
                         byte[] diskMark5 = { 0, 0x67, 0xe5, 8, 0x10, 0xe5, 0xe5, 0, 0xe5, 0x28, 0, 4, 0xf, 0, 0xc2, 0x00, 0xff, 0, 0xf0, 0, 0x40, 0, 2, 0, 0xbe };
                         for (var i = 0; i < diskMark5.Length; i++)
                             cpmBuf[getCpm.H37disktype - 1 + i] = diskMark5[i];
+
+                        break;
+                    case 0x43:          // NCR Disk type
+                        byte[] diskMark6 = { 0xe5, 0xe5, 0xe5, 0xe5, 0xe5, 0xe5, 0x4E, 0x43, 0x52, 0x20, 0x46, 0x33 };  // "NCR F3"
+                        for (var i = 0; i < diskMark6.Length; i++)
+                            cpmBuf[getCpm.H37disktype - 1 + i] = diskMark6[i];
+                        getCpm.ncrFlag = true;
+                        getCpm.ncrFlagDirty = true;
 
                         break;
                     default:
@@ -484,7 +496,6 @@ namespace DiskUtility
             openFileDialog1.RestoreDirectory = true;
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
-            string temp = "";
 
             var results = Globals.Results.Success;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -506,17 +517,28 @@ namespace DiskUtility
             }
 
             if (fileCnt > 0) // Added a file or two
+            {
+                if (getCpm.ncrFlagDirty) // update NCR F3 disk label if needed
                 {
-                FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
-                BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
-
-                fileOutBytes.Seek(0, SeekOrigin.Current);
-                fileOutBytes.Write(getCpm.buf, 0, diskTotalBytes);
-                fileOutBytes.Close();
-                fsOut.Dispose();
+                    getCpm.ncrInterleaved(ref getCpm.buf);
                 }
-            buttonFolder_Init(start);
-           insertMessage( fileCnt, filesSkipped, filesFull, "Insert CP/M Files");
+                try
+                {
+                    FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
+                    BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
+
+                    fileOutBytes.Seek(0, SeekOrigin.Current);
+                    fileOutBytes.Write(getCpm.buf, 0, diskTotalBytes);
+                    fileOutBytes.Close();
+                    fsOut.Dispose();
+                    insertMessage(fileCnt, filesSkipped, filesFull, "Insert CP/M Files");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error writing to file: " + ex.Message, "CP/M Insert", MessageBoxButtons.OK);
+                }
+                buttonFolder_Init(start);
+            }
 
         }
         /*
@@ -682,7 +704,7 @@ namespace DiskUtility
             openFileDialog1.RestoreDirectory = true;
             openFileDialog1.Multiselect = true;
             openFileDialog1.Title = "Select Files to Add to Image";
-            string temp = "";
+            //string temp = "";
             var results = Globals.Results.Success;
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
@@ -721,63 +743,6 @@ namespace DiskUtility
 
 
 
-
-
-        //private void TestCPM_click(object sender, EventArgs e)
-        //{
-        //    var cpmTest = new CPMFile();
-        //    OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-        //    var path = "TestCPM.H37";
-        //    openFileDialog1.InitialDirectory = tbFolder.Text;
-        //    openFileDialog1.Filter = "H37 files (*.H37)|*.H37";
-        //        openFileDialog1.FilterIndex = 2;
-        //        openFileDialog1.RestoreDirectory = true;
-        //        openFileDialog1.CheckFileExists = false;
-        //        openFileDialog1.ShowDialog();
-        //        path = openFileDialog1.FileName;
-
-        //    int diskType = 0x6f;
-        //    int diskTotalBytes = cpmTest.DiskType[diskType, 6] * cpmTest.DiskType[diskType, 7] *
-        //                     cpmTest.DiskType[diskType, 8];
-        //    var cpmBuf = new byte[diskTotalBytes];
-        //    for (var i = 0; i < diskTotalBytes; i++)
-        //        cpmBuf[i] = 0xE5;
-        //    cpmBuf[cpmTest.H37disktype] = (byte)cpmTest.DiskType[diskType, 0]; // set disk type marker
-
-        //    byte[] diskMark1 = { 0, 0x6f, 0xe5, 8, 0x10, 0xe5, 0xe5, 1, 0xe5, 0x28, 0, 4, 0xf, 0, 0x8a, 0x01, 0xff, 0, 0xf0, 0, 0x40, 0, 2, 0, 0xec };
-        //            for (var i = 0; i < diskMark1.Length; i++)
-        //                cpmBuf[cpmTest.H37disktype - 1 + i] = diskMark1[i];
-        //    FileStream fso = new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write);
-        //    BinaryWriter fileOutByte = new BinaryWriter(fso);
-
-        //    fileOutByte.Write(cpmBuf, 0, diskTotalBytes);
-        //    fileOutByte.Close();
-        //    fso.Dispose();
-        //    cpmTest.ReadCpmDir(path, ref diskTotalBytes);
-        //    var startDir =
-        //        tbFolder.Text; // openFileDialog1.InitialDirectory; // check if a working folder is selected
-        //    var fileCnt = 0;
-
-        //    if (startDir == "") startDir = "c:/";
-        //    openFileDialog1.InitialDirectory = startDir;
-        //    openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-        //    openFileDialog1.FilterIndex = 2;
-        //    openFileDialog1.RestoreDirectory = true;
-        //    openFileDialog1.Multiselect = true;
-        //    openFileDialog1.Title = "Select Files to Add to Image";
-        //    string temp = "";
-        //    if (openFileDialog1.ShowDialog() == DialogResult.OK)
-        //        foreach (String filename in openFileDialog1.FileNames)
-        //            fileCnt += cpmTest.InsertFileCpm(filename);
-
-
-        //    FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
-        //    BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
-
-        //    fileOutBytes.Seek(0, SeekOrigin.Current);
-        //    fileOutBytes.Write(cpmTest.buf, 0, diskTotalBytes);
-        //    fileOutBytes.Close();
-        //    fsOut.Dispose();
-        //    }
+ 
     }
 }
