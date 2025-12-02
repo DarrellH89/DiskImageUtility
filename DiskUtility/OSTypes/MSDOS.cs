@@ -14,6 +14,7 @@ namespace MSDOS
 { 
 class MsdosFile
     {
+        // 
         // test location 0x0B for file attributes
         private const byte FRead = 0x01; //  Read only
         private const byte FSys = 0x04; // system

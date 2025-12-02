@@ -14,6 +14,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Configuration;
 using HDOS;
 using static DiskUtility.Form1;
 
@@ -72,7 +73,7 @@ namespace DiskUtility
 
         public int FileCount = 0;
         public int TotalSize = 0;
-
+    
         public GroupBox FileViewerBorder;
         public RichTextBox FileViewerBox;
   
@@ -84,7 +85,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 2.3 (18 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 2.4 (20 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             userSettings = new DiuUserSettings();
@@ -205,7 +206,7 @@ namespace DiskUtility
             //BtnDelete.Enabled = false;
             BtnView.Enabled = false;
         }
-
+//
         private void ReadData()
         {
             // Read existing user settings (if any)
@@ -394,9 +395,9 @@ namespace DiskUtility
                     ProcessFileHdos(disk_name); // process HDOS files
 
                     }
-            else if (lb.ToString().Contains(".DOS")) 
+            else if (lb.ToString().ToUpper().Contains(".DOS")) 
                         ProcessFileDOS(disk_name);  // check for Z100 MS-DOS first
-                    else if (lb.ToString().Contains(".IMD"))   // assumes CP/M
+                    else if (lb.ToString().ToUpper().Contains(".IMD"))   // assumes CP/M
                         ProcessFileImd(disk_name);
                     else
                         ProcessFileH37(disk_name);    // process CP/M files
@@ -418,9 +419,9 @@ namespace DiskUtility
                     listBoxFiles.Items.Add(lb.ToString());
                     if (IsHDOSDisk(ref tempBuf))
                         ProcessFileHdos(disk_name);    // process HDOS files
-                    else if (lb.ToString().Contains(".DOS."))
+                    else if (lb.ToString().ToUpper().Contains(".DOS."))
                         ProcessFileDOS(disk_name); // check for Z100 MS-DOS first
-                    else if (lb.ToString().Contains(".IMD"))
+                    else if (lb.ToString().ToUpper().Contains(".IMD"))
                         ProcessFileImd(disk_name);
                     else
                         ProcessFileH37(disk_name); // process CP/M files
@@ -1002,7 +1003,6 @@ namespace DiskUtility
                     disk_file_entry.fDate = f.createDate;
                     disk_file_entry.fileType = "HDOS";
                     DiskFileList.Add(disk_file_entry);
-                    int tt = 0;
                     var tempStr = disk_file_entry.FileName.Substring(0, 11);
                     tempStr = tempStr.Insert(8, " ");
                     int tempSize = f.fsize ;
@@ -1026,7 +1026,7 @@ namespace DiskUtility
 
         private void ProcessFileDOS(string diskName) // for Z100 MS-DOS disks
         {
-            if (!diskName.EndsWith(".IMG"))
+            if (!diskName.EndsWith(".IMG",StringComparison.OrdinalIgnoreCase))
             {
                 MessageBox.Show("Only DOS IMG files are supported", "File Type error", MessageBoxButtons.OK);
                 return;
@@ -1238,7 +1238,6 @@ namespace DiskUtility
             //  extract file
             var files_extracted = 0;
             var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
-            var diskTotal = 0;
             var txtCnt = 0;
 
 
@@ -1251,10 +1250,10 @@ namespace DiskUtility
                     foreach (DiskFileEntry entry in DiskFileList)
                         if (entry.ListBox2Entry == idx)
                         {
-                            if (entry.DiskImageName.Contains(".IMD"))
+                            if (entry.DiskImageName.ToUpper().Contains(".IMD"))
                                 //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
                                 files_extracted += getCpmFile.ExtractFileCPMImd(entry);
-                            else if (entry.DiskImageName.Contains(".DOS"))
+                            else if (entry.DiskImageName.ToUpper().Contains(".DOS"))
                                 files_extracted += ExtractDosFile(entry);
                             else if(entry.fileType == "CPM")
                                  files_extracted += ExtractCpmFile(entry, ref txtCnt);
@@ -1274,10 +1273,10 @@ namespace DiskUtility
                     foreach (DiskFileEntry entry in DiskFileList)
                     {
                         // dcp changed Extract file to return 1 if successful
-                        if (entry.DiskImageName.Contains(".IMD"))
+                        if (entry.DiskImageName.ToUpper().Contains(".IMD"))
                             //var fileNameList = getCpmFile.ReadImdDir(entry.DiskImageName, ref diskTotal);
                             files_extracted += getCpmFile.ExtractFileCPMImd(entry);
-                        else if (entry.DiskImageName.Contains(".DOS"))
+                        else if (entry.DiskImageName.ToUpper().Contains(".DOS"))
                             files_extracted += ExtractDosFile(entry);
                         else if (entry.fileType == "CPM")
                             files_extracted += ExtractCpmFile(entry, ref txtCnt);
@@ -1322,7 +1321,7 @@ namespace DiskUtility
                         var fileLen = (int) file.Length;
                         var buf = new byte[fileLen];
                         var wbuf = new byte[fileLen];
-                        int wBufPtr = 0, rBufPtr = 0, firstSector = 0;
+                        int wBufPtr = 0, rBufPtr = 0;
 
                         try
                         {
