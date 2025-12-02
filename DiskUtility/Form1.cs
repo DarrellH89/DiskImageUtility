@@ -1009,7 +1009,6 @@ namespace DiskUtility
                     disk_file_entry.fDate = f.createDate;
                     disk_file_entry.fileType = "HDOS";
                     DiskFileList.Add(disk_file_entry);
-                    int tt = 0;
                     var tempStr = disk_file_entry.FileName.Substring(0, 11);
                     tempStr = tempStr.Insert(8, " ");
                     int tempSize = f.fsize ;
@@ -1245,7 +1244,6 @@ namespace DiskUtility
             //  extract file
             var files_extracted = 0;
             var getCpmFile = new CPMFile(); // create instance of CPMFile, then call function
-            var diskTotal = 0;
             var txtCnt = 0;
 
 
@@ -1329,7 +1327,7 @@ namespace DiskUtility
                         var fileLen = (int) file.Length;
                         var buf = new byte[fileLen];
                         var wbuf = new byte[fileLen];
-                        int wBufPtr = 0, rBufPtr = 0, firstSector = 0;
+                        int wBufPtr = 0, rBufPtr = 0;
 
                         try
                         {

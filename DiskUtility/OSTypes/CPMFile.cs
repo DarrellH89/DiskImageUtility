@@ -1288,9 +1288,8 @@ namespace CPM
             var bfPtr1 = 0;
             var bfPtr2 = trkSize * numTrack; // Half way point in image
 
-            //for(var j = 0; j < buffer.Length; j++)
-            //    buffer[j] = 0; // clear buffer  
-            System.Diagnostics.Debug.WriteLine("NCR Interleaved started");
+            //  Debug
+            //System.Diagnostics.Debug.WriteLine("NCR Interleaved started");
             ncrFlagDirty = false;
             for (var j = 0; j < numTrack; j++)
             {
@@ -1330,7 +1329,7 @@ namespace CPM
 
             }
             bf = tbuf;          // update buffer with sequential data
-            DebugPrintBuffer(ref tbuf, trkSize * numTrack * 2, "NCRdisk_Seq.img" );
+            //DebugPrintBuffer(ref tbuf, trkSize * numTrack * 2, "NCRdisk_Seq.img" );
         }
 
         //******************** DebugPrintBuffer *************************************
