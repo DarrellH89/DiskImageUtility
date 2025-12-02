@@ -215,11 +215,12 @@ namespace DiskUtility
             options = userSettings.options;
             if (options == "")
                 options = " ";
-            addFilesLoc = userSettings.addFilesLoc;
+        
             if (options.Contains("T"))
                 btnOption.Text = "Text Trunc On";
             else
                 btnOption.Text = "Text Trunc Off";
+             addFilesLoc = userSettings.addFilesLoc;
             if (addFilesLoc == "")
                 addFilesLoc = folderBrowserDialog2.SelectedPath;
         }
