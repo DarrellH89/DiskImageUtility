@@ -1303,7 +1303,7 @@ namespace CPM
             }
             bf = tbuf;          // update buffer with interleaved data
         }
-        //********************* NCR Sequential *********************************
+        //********************* NCR Sequential ********************************* 
         // Converts standard interleaved image to NCR Sequential format of 0-39 head 0, then 0-39 head 1
         // Converts data in buf[]
         public void ncrSequential(ref byte[] bf, int disk)

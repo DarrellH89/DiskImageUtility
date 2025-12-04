@@ -76,7 +76,8 @@ namespace DiskUtility
     
         public GroupBox FileViewerBorder;
         public RichTextBox FileViewerBox;
-  
+        public bool debugALB = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -98,6 +99,7 @@ namespace DiskUtility
             FileViewerBorder.BackColor = Color.DarkGray;
             FileViewerBorder.Visible = false;
 
+
             Controls.Add(FileViewerBorder);
 
             FileViewerBox = new RichTextBox();
@@ -107,6 +109,7 @@ namespace DiskUtility
             FileViewerBox.BorderStyle = BorderStyle.FixedSingle;
             FileViewerBox.BackColor = Color.LightGray;
             FileViewerBox.ReadOnly = true;
+  
 
             FileViewerBorder.Controls.Add(FileViewerBox);
 
@@ -309,7 +312,7 @@ namespace DiskUtility
 
             var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
  
-            var idx = listBoxFiles.SelectedIndex;
+            var idx = listBoxFiles.SelectedIndex;  // Review list of selected disk files
             if (idx != -1)
             {
                 for (var i = 0; i < listBoxFiles.SelectedItems.Count; i++)
@@ -362,6 +365,7 @@ namespace DiskUtility
         }
 
         //*************** File List ********************
+        // populate listboxFiles Rich Text Box with selected image(s) file directory
         private void BtnFileList_Click(object sender, EventArgs e)
         {
             //  catalog selected image(s)
@@ -968,8 +972,12 @@ namespace DiskUtility
             listBoxFiles.Items.Add("");
             TotalSize += (int)diskUsed;
             FileCount += diskFileCnt;
-
+            if(debugALB)
+                ViewCpmAlb(ref getCpmFile);
         }
+
+
+
         //******************************* Process File HDOS ********************************
 
         private void ProcessFileHdos(string diskName) // for .H37 & H8D disks
@@ -1098,11 +1106,41 @@ namespace DiskUtility
         }
 
 
+        //*********************** Btn View CPM ALB *********************************
+        private void BtnViewCpmAlb_Click(object sender, EventArgs e)
+        {
+            //  view CPM ALB file
+            debugALB = !debugALB;
+            if (debugALB)
+                btnDebug.Text = "Debug On";
+            else
+                btnDebug.Text = "Debug Off";
+        }
 
 
+        // View CP/M ALB List
+        private void ViewCpmAlb(ref CPMFile alpha)
+        {
+
+            FileViewerBorder.Visible = true;
+            var encoding = new UTF8Encoding();
+            var newTitleStr = "Alocation Block Viewer: "; // + alpha.fname;
+            FileViewerBorder.Text = newTitleStr;
+            FileViewerBox.Clear();
+
+            //FileViewerBorder.Visible = true;
+            foreach (var f in alpha.fileNameList)
+            {
+             FileViewerBox.AppendText(f.fname + "\n");     
+            }
+
+            FileViewerBorder.BringToFront();
+            FileViewerBox.BringToFront();
+
+        }
         //*********************** Btn View Click *********************************
 
-            private void BtnView_Click(object sender, EventArgs e)
+        private void BtnView_Click(object sender, EventArgs e)
         {
             //  view file
             var idx = listBoxFiles.SelectedIndex;
@@ -1128,7 +1166,8 @@ namespace DiskUtility
                 listBoxImages.Enabled = true;
                 BtnView.Enabled = true;
 
-                if (bImageList) BtnfileList.Enabled = true;
+                if (bImageList) 
+                    BtnfileList.Enabled = true;
                 BtnFolder.Enabled = true;
                 return;
             }

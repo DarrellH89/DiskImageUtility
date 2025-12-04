@@ -50,6 +50,7 @@ namespace DiskUtility
             this.button1 = new System.Windows.Forms.Button();
             this.BtnAddHdos = new System.Windows.Forms.Button();
             this.btnOption = new System.Windows.Forms.Button();
+            this.btnDebug = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -255,11 +256,22 @@ namespace DiskUtility
             this.btnOption.UseVisualStyleBackColor = true;
             this.btnOption.Click += new System.EventHandler(this.btnOption_click);
             // 
+            // btnDebug
+            // 
+            this.btnDebug.Location = new System.Drawing.Point(22, 626);
+            this.btnDebug.Name = "btnDebug";
+            this.btnDebug.Size = new System.Drawing.Size(85, 22);
+            this.btnDebug.TabIndex = 23;
+            this.btnDebug.Text = "Debug  Off";
+            this.btnDebug.UseVisualStyleBackColor = true;
+            this.btnDebug.Click += new System.EventHandler(this.BtnViewCpmAlb_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(972, 712);
+            this.Controls.Add(this.btnDebug);
             this.Controls.Add(this.btnOption);
             this.Controls.Add(this.BtnAddHdos);
             this.Controls.Add(this.button1);
@@ -313,6 +325,7 @@ namespace DiskUtility
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button BtnAddHdos;
         private System.Windows.Forms.Button btnOption;
+        private System.Windows.Forms.Button btnDebug;
     }
 }
 
