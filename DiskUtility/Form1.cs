@@ -17,6 +17,7 @@ using System.Windows.Forms;
 using System.Configuration;
 using HDOS;
 using static DiskUtility.Form1;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace DiskUtility
 {
@@ -69,7 +70,7 @@ namespace DiskUtility
          public DiskLabelEntry RelabelEntry;
         */
 
-        public bool bImageList = false;
+        public bool bImageList = false;         // Flag to enable/disable File List button *** Really needed? *** File List function checks listBoxImages count
 
         public int FileCount = 0;
         public int TotalSize = 0;
@@ -78,9 +79,11 @@ namespace DiskUtility
         public RichTextBox FileViewerBox;
         public bool debugALB = false;
 
-        public Form1()
+        public Form1(string options)
         {
             InitializeComponent();
+            options = options.ToUpper();
+            SetOptions(options);
             CenterToScreen();
         }
         private void Form1_Load(object sender, EventArgs e)
@@ -92,13 +95,13 @@ namespace DiskUtility
             userSettings = new DiuUserSettings();
 
             FileViewerBorder = new GroupBox();
-            FileViewerBorder.Size = new Size(720, 580);
+            FileViewerBorder.Size = new Size(720, 720);
             FileViewerBorder.Location = new Point(90, 30);
             FileViewerBorder.Text = "File Viewer";
             FileViewerBorder.ForeColor = Color.Black;
             FileViewerBorder.BackColor = Color.DarkGray;
             FileViewerBorder.Visible = false;
-
+           
 
             Controls.Add(FileViewerBorder);
 
@@ -133,7 +136,25 @@ namespace DiskUtility
             ReadData();
             FileCount = 0;
             // DCP
-            if (folderBrowserDialog2.SelectedPath.Length > 0) BtnFolder_init();
+            if (folderBrowserDialog2.SelectedPath.Length > 0) 
+                BtnFolder_init();
+
+        }
+        //***************** Options *********************
+        private void SetOptions(string args)
+        {
+            if (args.Contains("D"))
+            {
+                btnDebug.Visible = true;
+                debugALB = true;
+                btnDebug.Text = "Debug On";
+            }
+            else
+            {
+                btnDebug.Visible = false;
+                debugALB = false;
+                btnDebug.Text = "Debug Off";
+            }
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -150,8 +171,11 @@ namespace DiskUtility
     
         }
 
-        private void
-            BtnFolder_initA() // dcp modified code to read files store in last used directory. initA is used both on startup and when Folder Button is clicked.
+        //***************** BtnFolder_initA  *********************
+        // dcp modified code to read files store in last used directory. initA is used both on startup and when Folder Button is clicked.
+        //
+
+        private void BtnFolder_initA() 
         {
             listBoxImages.Items.Clear(); // clear file list
             labelFolder.Text = folderBrowserDialog2.SelectedPath; // display current working directory
@@ -302,6 +326,9 @@ namespace DiskUtility
 
         }
         //********************* Delete File ***********************
+        // Deletes selected files in the File List box (listBoxFiles)
+        // Works for HDOS and CP/M files
+        // Supports deleting multiple files from multiple disk images in one operation
         private void ButtonDelete(object sender, EventArgs e)
         {
             var files_deleted = 0;
@@ -309,9 +336,12 @@ namespace DiskUtility
             var files_skipped = 0;
             var diskTotal = 0;
             string diskImage = "";
+            var buf = new byte[80 * 2 * 512 * 18 + 1024]; // temp buffer for reading directory entries - Uses CP/M max size as it is larger than HDOS
+            var fileLen = 0;
 
             var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
- 
+            var getCpmFile = new CPMFile();     // CP/M working buffer
+
             var idx = listBoxFiles.SelectedIndex;  // Review list of selected disk files
             if (idx != -1)
             {
@@ -325,41 +355,64 @@ namespace DiskUtility
                             {
                                 if (diskImage != entry.DiskImageName)
                                 {
-                                    if (diskImage.Length > 0 && fileImage_deleted>0)     // image change, write last
-                                        WriteHdosImage(diskImage, getHdosFile);
+                                    //if (diskImage.Length > 0 && fileImage_deleted>0)     // image change, write last  *** Question if this case ever happens ***
+                                    //    WriteDiskImage(diskImage, ref buf, fileLen);
                                     diskImage = entry.DiskImageName;
                                     fileImage_deleted = 0;
                                     getHdosFile.ReadHdosDir(diskImage, ref diskTotal);
                                 }
                                 if (getHdosFile.DeleteFileHDOS(entry) > 0)
                                 {
+                                    buf = getHdosFile.buf; // get modified disk image buffer
+                                    files_deleted++;
+                                    fileImage_deleted++;
+                                }
+                            }
+                            else if (entry.fileType == "CPM")
+                            {
+                                if (diskImage != entry.DiskImageName)
+                                {
+                                    //if (diskImage.Length > 0 && fileImage_deleted > 0)     // image change, write last
+                                    //    WriteDiskImage(diskImage, ref buf, fileLen);
+                                    diskImage = entry.DiskImageName;
+                                    fileImage_deleted = 0;
+                                    getCpmFile.ReadCpmDir(diskImage, ref diskTotal);
+                                }
+                                if (getCpmFile.DeleteFileCPM(entry) > 0)
+                                {
+                                    buf = getCpmFile.buf; // get modified disk image buffer
                                     files_deleted++;
                                     fileImage_deleted++;
                                 }
                             }
                             else
                                 files_skipped++;
+                          if (diskTotal > 0 && fileImage_deleted > 0)     // image change, write last
+                            WriteDiskImage(diskImage, ref buf, diskTotal); 
                         }
-                }
-                if (diskImage.Length > 0 && fileImage_deleted > 0)     // image change, write last
-                    WriteHdosImage(diskImage, getHdosFile);
-                listBoxFiles.ClearSelected();
-            }
 
+                }
+
+
+            }
+            listBoxFiles.ClearSelected();
             var message = string.Format("{0} file(s) deleted, {1} file(s) skipped", files_deleted, files_skipped);
             MessageBox.Show(this, message, "Disk Image Utility HDOS Files Only");
             BtnFileList_Click(sender, e);
 
         }
 
-        //**************************** Write Hdos Image **********************
-        private void WriteHdosImage(string path, HDOSFile hFile)
+        //**************************** Write Disk Image **********************
+        // Inputs: path - file name to write
+        //         buf - byte array containing disk image data
+        //
+        private void WriteDiskImage(string path, ref byte[] buf, int fileLen)
         {
             FileStream fsOut = new FileStream(path, FileMode.Open, FileAccess.Write);
             BinaryWriter fileOutBytes = new BinaryWriter(fsOut);
 
             fileOutBytes.Seek(0, SeekOrigin.Current);
-            fileOutBytes.Write(hFile.buf, 0, hFile.fileLen);
+            fileOutBytes.Write(buf, 0, fileLen);
             fileOutBytes.Close();
             fsOut.Dispose();
         }
@@ -1118,31 +1171,51 @@ namespace DiskUtility
         }
 
 
-        // View CP/M ALB List
+        //********************** View CP/M ALB List ***********************
         private void ViewCpmAlb(ref CPMFile alpha)
         {
+            var check = new byte[400];          // ALB check array for duplicate assignments
 
             FileViewerBorder.Visible = true;
             var encoding = new UTF8Encoding();
-            var newTitleStr = "Alocation Block Viewer: "; // + alpha.fname;
+            var newTitleStr = "Allocation Block Viewer: "; // + alpha.fname;
             FileViewerBorder.Text = newTitleStr;
             FileViewerBox.Clear();
 
-            //FileViewerBorder.Visible = true;
             foreach (var f in alpha.fileNameList)
             {
-             FileViewerBox.AppendText(f.fname + "\n");     
-            }
+                var temp = f.fname + " ";
+                var max = 0;
 
+                foreach (var item in f.fcbList)
+                {
+                    for (var i = 0; i < 16; i++)            // build a string with the filename and any ALBs used
+                        if (item.fcb[i] > 0)
+                        {
+                            temp = temp + string.Format("{0,3:X} ", item.fcb[i]);
+                            check[item.fcb[i]]++;
+                            if(item.fcb[i] > max)
+                                max = item.fcb[i];
+                        }
+
+                }
+                FileViewerBox.AppendText(temp + Environment.NewLine);       // add to the view box
+                for (var i = 0; i < max; i++)
+                    if (check[i] > 1)
+                    {
+                        temp = temp + " ** DUPLICATE BLOCKS ** ";
+                        FileViewerBox.AppendText(temp + Environment.NewLine);
+                    }        
+            }
             FileViewerBorder.BringToFront();
             FileViewerBox.BringToFront();
-
         }
         //*********************** Btn View Click *********************************
 
         private void BtnView_Click(object sender, EventArgs e)
         {
             //  view file
+            FileViewerBorder.Visible = true;
             var idx = listBoxFiles.SelectedIndex;
             if (idx != -1)
                 foreach (DiskFileEntry entry in DiskFileList)
@@ -1155,24 +1228,6 @@ namespace DiskUtility
     //************************ View File ******************************************
         private void ViewFile(string disk_image_file, DiskFileEntry disk_file_entry)
         {
-            //  view the selected file
-            if (FileViewerBorder.Visible)
-            {
-                FileViewerBox.Clear();
-
-                FileViewerBorder.Visible = false;
-
-                listBoxFiles.Enabled = true;
-                listBoxImages.Enabled = true;
-                BtnView.Enabled = true;
-
-                if (bImageList) 
-                    BtnfileList.Enabled = true;
-                BtnFolder.Enabled = true;
-                return;
-            }
-
-          
 
                 // dcp Add CPM File view for H37, IMG, and H8D disks
                 //var fileType = (disk_image_file.ToUpper().Contains(".H37") || disk_image_file.ToUpper().Contains(".H8D")
@@ -1217,13 +1272,32 @@ namespace DiskUtility
 
   
         }
-
+        // ******************** filebutton1_click **************************
+        // to close FileViewerBorder window
+        //
         private void filebutton1_Click(object sender, EventArgs e)
         {
-            BtnView_Click(sender, e);
+
+            if (FileViewerBorder.Visible)
+            {
+                FileViewerBox.Clear();
+
+                FileViewerBorder.Visible = false;
+
+                listBoxFiles.Enabled = true;
+                listBoxImages.Enabled = true;
+                BtnView.Enabled = true;
+
+                if (bImageList)
+                    BtnfileList.Enabled = true;
+                BtnFolder.Enabled = true;
+                return;
+            }
+            BtnView_Click(sender, e);    
         }
 
-
+        // ******************* Extract HDOS File **************************
+        //
 
         private int ExtractHdosFile(DiskFileEntry disk_file_entry)
         {
@@ -1235,17 +1309,21 @@ namespace DiskUtility
 
             return result;
         }
+        //// ******************* Delete HDOS File **************************
+        ////
+        //private int DeleteHdosFile(DiskFileEntry disk_file_entry)
+        //{
+        //    var result = 0; // dcp extracted file count to deal with file extract fail
 
-        private int DeleteHdosFile(DiskFileEntry disk_file_entry)
-        {
-            var result = 0; // dcp extracted file count to deal with file extract fail
-
-            var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
-            result = getHdosFile.DeleteFileHDOS(disk_file_entry);
+        //    var getHdosFile = new HDOSFile(); // create instance of HDOSFile, then call function
+        //    result = getHdosFile.DeleteFileHDOS(disk_file_entry);
 
 
-            return result;
-        }
+        //    return result;
+        //}
+
+        // ******************* Extract CPM File **************************
+        //
         private int ExtractCpmFile(DiskFileEntry disk_file_entry, ref int txtCnt)
         {
             var result = 0; // dcp extracted file count to deal with CP/M file extract fail
@@ -1257,6 +1335,9 @@ namespace DiskUtility
 
             return result;
         }
+
+        // ******************* Extract DOS File **************************
+        //
         private int ExtractDosFile(DiskFileEntry disk_file_entry)
         {
             var result = 0; // dcp extracted file count to deal with file extract fail
@@ -1334,6 +1415,7 @@ namespace DiskUtility
             }
         }
 
+        // ********* Not sure I need these two empty functions
         private void textBox1_TextChanged_1(object sender, EventArgs e)
         {
 

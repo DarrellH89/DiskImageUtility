@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Windows.Forms;
 
@@ -108,11 +109,13 @@ namespace CPM
         Bit 1 1 = double density, 0 = single density
         Bit 0 1 = double sided, 0 = single sided
         */
+        // required parameters
         private string fname;
         private byte[] fnameb;
         private bool readOnly; // Read only file
         private bool sys; // system file
         private uint fsize; // file size 
+        //
         private List<FCBlist> FCBfirst;
 
         public class DirList : IComparable<DirList>
@@ -1096,7 +1099,56 @@ namespace CPM
 
             return result;
         }
+        // **************  Delete File CP/M *********************
+        // inputs: Form1 DiskFileEntry with disk image name
+        /*
+             * filename = CP/M filename
+            * ref byte[] fileBuff
+            * Assumes ReadCpmDir already populated image parameters
+            */
+        public int DeleteFileCPM(Form1.DiskFileEntry disk_file_entry)
+        {
+            var result = 0;
+            //long filei = 0; // file buffer index
+            var diskImage = disk_file_entry.DiskImageName;
+            var fileNameStr = disk_file_entry.FileName;
+         
+            byte[] fileNameB = new byte[12];     // make a char copy of filename with ' ' = 0
 
+            fileNameB[0] = (byte)disk_file_entry.UserArea; // convert user area to binary
+
+            for (var i = 2; i < fileNameStr.Length; i++)
+                    fileNameB[i-1] = (byte)fileNameStr[i];
+            
+            if (DiskImageImdActive != diskImage) // image mismatch
+                return result;
+            var obj = fileNameList.FirstOrDefault(x => x.fname == fileNameStr);
+            if (obj == null)
+            {
+                MessageBox.Show("File Not Found", fileNameStr, MessageBoxButtons.OK);
+                return result;
+            }
+            // Find DIR entry
+            var start = dirStart ;           // Ignore user area
+            var dirEnd = start + dirSize;
+            var dirFind = 0;
+            var t = new byte[512];
+            Array.Copy(buf, 0x2880, t, 0, 512);  
+            while (start < dirEnd)
+            {
+                int p =0;
+                for (; p < 12; p++)
+                    if (buf[start + p] != fileNameB[p])
+                        break;
+                if (p == 12)
+                {
+                    buf[start] = 0xe5;      // mark available
+                    result = 1;
+                }
+                start += 32;
+            }
+            return result;
+        }
         //********************* View File CPM *********************************
         // View files from H37 or H8D images
 

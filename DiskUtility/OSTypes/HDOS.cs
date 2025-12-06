@@ -732,8 +732,8 @@ namespace HDOS
         }
         // **************  Delete File HDOS *********************
         // inputs: Form1 DiskFileEntry with disk image name
-        /*
-             * filename = HDOS filename
+           /*
+            * filename = HDOS filename
             * ref byte[] fileBuff
             * Assumes ReadHdosDir already populated image parameters
             */
@@ -741,9 +741,6 @@ namespace HDOS
         {
 
             var result = 0;
-            long
-                //diskItemp,
-                filei = 0; // file buffer index
             var diskImage = disk_file_entry.DiskImageName;
             var fileNameStr = disk_file_entry.FileName;
             char[] fileNameB= new char[fileNameStr.Length];     // make a char copy of filename with ' ' = 0
