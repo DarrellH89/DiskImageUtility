@@ -302,14 +302,14 @@ namespace HDOS
             if (result == Globals.Results.Success)              // valid directory entry and space on disk
             {
                 var tt3 = (len % (diskSectorPerGroup * 256));
-                int lastGroupSector = (int)(padLen %(diskSectorPerGroup*256))/256;
+                int maxSector = (int)(padLen %(diskSectorPerGroup*256))/256;
                 if ((padLen %( diskSectorPerGroup * 256 ))%256 !=0)             // check if remainder is a multiple of 256
-                    lastGroupSector++;
-                if(lastGroupSector == 0)
-                    lastGroupSector = diskSectorPerGroup;
+                    maxSector++;
+                if(maxSector == 0)
+                    maxSector = diskSectorPerGroup;
                 var iDate = HdosDate(cDate.Day, cDate.Month, cDate.Year);
                 var t2 = HdosDateStr(iDate);
-                LoadDirHdos(filenameb,startDir,0,startFree,nextFree,lastGroupSector,iDate);
+                LoadDirHdos(filenameb,startDir,0,startFree,nextFree,maxSector,iDate);
                 // load data 
                 var grpPtr = buf[grtStart];
                 var grpPtrLast = grpPtr;
@@ -322,7 +322,7 @@ namespace HDOS
                     getBytes = diskSectorPerGroup;
                     if (numFree == cntFree - 1)
                     {
-                        getBytes = lastGroupSector;
+                        getBytes = maxSector;
                     }
                     for (var i = 0; i < getBytes * 256; i++)
                         buf[imgPtr + i] = filebuf[fPtr+i];
@@ -349,6 +349,8 @@ namespace HDOS
         // Read directory gathering file names and sizes
         // update fileDetail with directory read
         // update file count and total file size
+        // Returns file size in Disk Total
+        //
         public void ReadHdosDir(string diskFileName, ref int diskTotal)
         {
             var encoding = new UTF8Encoding();
@@ -363,13 +365,13 @@ namespace HDOS
                 firstGroup = 0,
                 nextGroup = 0,
                 lastGroup = 0,
-                lastGroupSector = 0;
+                maxSector = 0;
 
             if (diskFileName != DiskImageActive) // check if data already in memory
             {
                 var file = File.OpenRead(diskFileName); // read entire file into an array of byte
                 var fileByte = new BinaryReader(file);
-                fileLen = (int)file.Length;
+                diskTotal = fileLen = (int)file.Length;
                 try
                 {
                     if (fileByte.Read(buf, 0, bufferSize) != fileLen || fileLen < 256)
@@ -386,20 +388,21 @@ namespace HDOS
 
                 DiskImageActive = diskFileName;
 
-                diskTotal = fileLen / 256; // size in clusters
-                switch (diskTotal) // HDOS limits clusters to fit cluster map in one 256 byte sector
-                {
-                    case 1280:
-                        diskTotal = 1278;
-                        break;
-                    case 2560:
-                        diskTotal = 2550;
-                        break;
-                    default:
-                        break;
-                }
+                // Remove this code after testing. The values aren't used anywhere
+                //diskTotal = fileLen / 256; // size in clusters
+                //switch (diskTotal) // HDOS limits clusters to fit cluster map in one 256 byte sector
+                //{
+                //    case 1280:
+                //        diskTotal = 1278;
+                //        break;
+                //    case 2560:
+                //        diskTotal = 2550;
+                //        break;
+                //    default:
+                //        break;
+                //}
 
-                diskTotal -= 20; // reserved HDOS
+                //diskTotal -= 20; // reserved HDOS
                 fileNameList.Clear();
                 file.Close();
                 file.Dispose();
@@ -470,10 +473,10 @@ namespace HDOS
                     firstGroup = buf[dirBufPtr + 0x10];
                     nextGroup = firstGroup;
                     lastGroup = buf[dirBufPtr + 0x11];
-                    lastGroupSector = buf[dirBufPtr + 0x12];
+                    maxSector = buf[dirBufPtr + 0x12];
 
                     var temp = new DirList(fnameStr,  flagStr, userArea, firstGroup,
-                        lastGroup, lastGroupSector); // temp storage
+                        lastGroup, maxSector); // temp storage
                     
                     // Calculate file size
                     var fileDirSize = diskSectorPerGroup;

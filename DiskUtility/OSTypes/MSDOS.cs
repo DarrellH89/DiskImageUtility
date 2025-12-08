@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Windows.Forms;
 using DiskUtility;
@@ -88,8 +89,6 @@ class MsdosFile
         ///  Reference http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html
         /// 
         // 0.Disk type, 1.Allocation block size (Cluster), 2.Directory start, 3.dir size, 4.interleave, 5.Sectors per Track,
-
-
         // 6.Sector Size, 7.# Tracks, 8. # heads, 9. FAT start, 10. # sectors in FAT, 
         // 11. Max FAT, 12. Total Sectors, 13. sectors per cluster, 14. IMD Value
         //
@@ -211,10 +210,6 @@ class MsdosFile
 
             long diskIndx = dirStart, // MSDOS disk index
                 diskIndxTemp;
-                //filei = 0; // file buffer index
-            // string filename = addFilename;
-            //if (filename.Length == 0||DiskImageImdActive.Length == 0)           // no filename to add
-            //    return 0;
 
             // read entire file to add to the disk image into buffer
             var file = File.OpenRead(filename);
@@ -387,7 +382,7 @@ class MsdosFile
             // update filename list with file information and first FAT
             // update file count and total file size
 
-            int result = 0, fileLen = 0;
+            int result = 0, fileLen = 0, bpbchk = 0;
             var encoding = new UTF8Encoding();
             var subDir = false;
 
@@ -422,8 +417,9 @@ class MsdosFile
             }
 
             if(diskTotal == 327680 || diskTotal == 327712 ) diskType = 0xff;
-            else if(diskTotal == 368640) diskType = (int)buf[0x15];
-                    else diskType = (int)buf[0x15];
+                else if(diskTotal == 368640) 
+                    diskType = (int)buf[0x15];
+                       else diskType = (int)buf[0x15];
             int ctr,
                 bufPtr = 0;
 
@@ -434,15 +430,16 @@ class MsdosFile
                 {
                      break;
                 }
-            else if (diskTotal == DiskType[ctr, 12] * DiskType[ctr, 6])     // assign diskTotal based on file size
-            {
-                diskType = DiskType[ctr, 0];
-                break;
-            }
-
+                else if (diskTotal == DiskType[ctr, 12] * DiskType[ctr, 6])     // assign diskTotal based on file size
+                                                                                // Could be an issue if the table contained two disks of the same size
+                {
+                    diskType = DiskType[ctr, 0];
+                    break;
+                }
+           
             // error if no match found
             if (ctr == DiskType.GetLength(0))
-                MessageBox.Show("Error - MS-DOS Disk Type not found in File", diskFileName, MessageBoxButtons.OK);
+                MessageBox.Show("Error - MS-DOS Disk Type not found in File", Path.GetFileNameWithoutExtension(diskFileName), MessageBoxButtons.OK);
             else
             {
                 result = 1;
@@ -456,11 +453,38 @@ class MsdosFile
                 numHeads = DiskType[ctr, 8];  // number of heads
                 maxFat = DiskType[ctr, 11];      // max number of FAT entries
                 maxSect = DiskType[ctr, 12];     // max number of sectors
-                diskSize = numTrack * numHeads * spt * sectorSize / 1024;
+                diskSize = numTrack * numHeads * spt * sectorSize / 1024;       // disk size in K
                 dirSectStart = dirStart / sectorSize;
                 fatPtr = DiskType[ctr, 9]; // First FAT location
                 fatSectors = DiskType[ctr, 10];
                 dataStart = dirStart + dirSize;
+                // BIOS Parameter Block error checks
+                var tmsg = "Error - BPB";
+                if (diskType != (int)buf[0x15])             // disk type check, media descriptor
+                {
+                    bpbchk += 2;
+                    tmsg += " - media descriptor";
+
+                }
+                if (fatSectors != (int)buf[0x10])           // # sectors per FAT entry
+                {
+                    bpbchk += 4;
+                    tmsg += " - sectors/FAT";
+                }
+                // Code not working. Triggers true when false
+                //int tt;
+                //if (maxSect - (((int)buf[0x13]) +(int)buf[0x14] * 256) > 1);            // max FAT #
+                //{ 
+                //    tt=((int)buf[0x13] +(int)buf[0x14] * 256);
+                //    tt -= maxSect;
+                //    bpbchk += 8;
+                //    tmsg += " - Total Sectors";
+                //}
+                if (bpbchk > 0)
+                {
+                    result = 0;
+                    MessageBox.Show(tmsg, Path.GetFileNameWithoutExtension(diskFileName), MessageBoxButtons.OK);
+                }
             }
             if (result == 1) // done error checking, read directory
             {
@@ -487,16 +511,20 @@ class MsdosFile
                             }
 
                             // get file name in both string and byte format
-                            var fnameStr = encoding.GetString(buf, bufPtr + dirPtr , 11);
-                            var t = bufPtr + dirPtr + 0x1c;
+                            var fnameStr = encoding.GetString(buf, bufPtr + dirPtr , 11);               // convert first 11 bytes to string
+                            if (flagStr.Contains("Label"))
+                                fnameStr = "." + fnameStr;
+                            var t = bufPtr + dirPtr + 0x1c;                                             // Start of 4 bytes for file size
                             var fileDirSize = buf[t] + buf[t + 1] * 256 + buf[t + 2] * 256 * 256 + buf[t + 3] * 256 * 256 * 256;
-                            t = bufPtr + dirPtr + 0x16;
+                            t = bufPtr + dirPtr + 0x16;                     // LAst modified time/date
                             var fTime = buf[t++] + buf[t++]*256; 
                             var fDate = buf[t++] + ((int) buf[t++]) *256;
                             //var datestr = DosDateStr(fDate);
                             //var timestr = DosTimeStr(fTime);
-
-                            var fFat = buf[t++] + buf[t++] * 256;
+                            // 
+                            // get first FAT, t now equals 0x1a. Make sure by setting to 0x1a
+                            t = bufPtr + dirPtr + 0x1a;
+                            var fFat = buf[t++] + buf[t] * 256;
 
                              var temp = new DirList(fnameStr, fileDirSize, flagStr, fTime, fDate, fFat, subDir); // temp storage
                             Array.Copy(buf, bufPtr + dirPtr + 1, temp.fnameB, 0, 11); // copy byte filename
@@ -505,6 +533,7 @@ class MsdosFile
                             if (subDir)
                             {
                                 ReadMsdosSubDir( fnameStr, fFat);
+                                subDir = false;
                             }
                         }
 
@@ -514,7 +543,8 @@ class MsdosFile
         }
 
         /********************* Read MSDOS Sub Dir ************************************
-         *
+         * Ref: https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+         * Inoput:
          */
         public void ReadMsdosSubDir(string dirFname, int fatPtr)
         {
@@ -525,17 +555,20 @@ class MsdosFile
                 {
                     // process flag data
                     var flagStr = "";
-                    if ((buf[bufPtr + dirPtr + 0x0b] & FRead) > 0) flagStr += "R/O";
-                    if ((buf[bufPtr + dirPtr + 0x0b] & FSys) > 0) flagStr += " S";
-                    if ((buf[bufPtr + dirPtr + 0x0b] & FHidden) > 0) flagStr += " H";
-                    if ((buf[bufPtr + dirPtr + 0x0b] & FLabel) > 0) flagStr += "Vol Label";
-                    if ((buf[bufPtr + dirPtr + 0x0b] & FSub) > 0)
+                    var flagByte = buf[bufPtr + dirPtr + 0x0b];
+                    if ((flagByte & FRead) > 0) flagStr += "R/O";
+                    if ((flagByte & FSys) > 0) flagStr += " S";
+                    if ((flagByte & FHidden) > 0) flagStr += " H";
+                    if ((flagByte & FLabel) > 0) flagStr += "Vol Label";
+                    if ((flagByte & FSub) > 0)
                     {
                         flagStr += "Directory";
                     }
 
                     // get file name in both string and byte format
-                    var fnameStr = dirFname+ "\0"+ encoding.GetString(buf, bufPtr + dirPtr, 11);
+                    // dirFname+ "\0"+ encoding.GetString(buf, bufPtr + dirPtr, 11);
+                    var fnameStr = encoding.GetString(buf, bufPtr + dirPtr, 11);      // embed 0 in string to sort list correctly and trim for display
+                    fnameStr = dirFname + "\0" + fnameStr.Insert(8, " ");                                                                                   // sorts files in sub directory under the sub directory name
                     var t = bufPtr + dirPtr + 0x1c;
                     var fileDirSize = buf[t] + buf[t + 1] * 256 + buf[t + 2] * 256 * 256 + buf[t + 3] * 256 * 256 * 256;
                     t = bufPtr + dirPtr + 0x16;
@@ -603,7 +636,8 @@ class MsdosFile
 
             var encoding = new UTF8Encoding();
             var dir = string.Format("{0}_Files",disk_image_file); // create directory name and check if directory exists
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            if (!Directory.Exists(dir)) 
+                Directory.CreateDirectory(dir);
             fnameb = encoding.GetBytes(disk_file_entry.FileName);
 
             // Create output File

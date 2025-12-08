@@ -95,7 +95,7 @@ namespace DiskUtility
             userSettings = new DiuUserSettings();
 
             FileViewerBorder = new GroupBox();
-            FileViewerBorder.Size = new Size(720, 720);
+            FileViewerBorder.Size = new Size(720, 600);
             FileViewerBorder.Location = new Point(90, 30);
             FileViewerBorder.Text = "File Viewer";
             FileViewerBorder.ForeColor = Color.Black;
@@ -334,6 +334,7 @@ namespace DiskUtility
             var files_deleted = 0;
             var fileImage_deleted = 0;
             var files_skipped = 0;
+            var filesNotSupported = 0;
             var diskTotal = 0;
             string diskImage = "";
             var buf = new byte[80 * 2 * 512 * 18 + 1024]; // temp buffer for reading directory entries - Uses CP/M max size as it is larger than HDOS
@@ -367,6 +368,8 @@ namespace DiskUtility
                                     files_deleted++;
                                     fileImage_deleted++;
                                 }
+                                else
+                                    files_skipped++;    
                             }
                             else if (entry.fileType == "CPM")
                             {
@@ -384,9 +387,11 @@ namespace DiskUtility
                                     files_deleted++;
                                     fileImage_deleted++;
                                 }
+                                else
+                                    files_skipped++;
                             }
                             else
-                                files_skipped++;
+                                filesNotSupported++;
                           if (diskTotal > 0 && fileImage_deleted > 0)     // image change, write last
                             WriteDiskImage(diskImage, ref buf, diskTotal); 
                         }
@@ -397,7 +402,9 @@ namespace DiskUtility
             }
             listBoxFiles.ClearSelected();
             var message = string.Format("{0} file(s) deleted, {1} file(s) skipped", files_deleted, files_skipped);
-            MessageBox.Show(this, message, "Disk Image Utility HDOS Files Only");
+            if (filesNotSupported > 0)
+                message += string.Format(", {0} file(s) not supported for delete", filesNotSupported);
+            MessageBox.Show(this, message, "Delete HDOS and CP/M Files");
             BtnFileList_Click(sender, e);
 
         }
@@ -1105,9 +1112,9 @@ namespace DiskUtility
                 diskFileCnt = 0;
                 diskUsed = 0;
                 listBoxFiles.Items.Add("MS-DOS DISK IMAGE");
-                listBoxFiles.Items.Add("========  === ==== ========= ========== =======");
-                listBoxFiles.Items.Add("  FILE    EXT SIZE   FLAGS   Date       Time");
-                listBoxFiles.Items.Add("========  === ==== ========= ========== =======");
+                listBoxFiles.Items.Add("=========  === ==== ========== ========== =======");
+                listBoxFiles.Items.Add("   FILE    EXT SIZE   FLAGS     Date       Time");
+                listBoxFiles.Items.Add("=========  === ==== ========== ========== =======");
                 foreach (var f in getDosFile.fileNameList)
                 {
                     diskFileCnt++;
@@ -1122,20 +1129,23 @@ namespace DiskUtility
                     disk_file_entry.fileType = "DOS";
                     DiskFileList.Add(disk_file_entry);
 
-                    var tempStr = f.fname;
+                    var tempStr = f.fname.Insert(8, " ");            // pad to allow for sub directories
+                    if (f.flags.Contains("Label"))
+                    {
+                        tempStr = tempStr.Remove(0, 1);
+                    }
                     if (f.isSubDir)
                     {
                         subDir = true;
                         subFname = f.fname;
                     }
-
                     if (subDir && f.fname != subFname)          // check if file is from previous sub directory and remove subdir name from string
                     {
                         if (f.fname.Contains(subFname))
                         {
                             var pos  = tempStr.IndexOf("\0",0);
-                            tempStr = " " + tempStr.Substring(pos+1).Insert(8, " ");
-
+                            tempStr = " " + tempStr.Substring(pos + 1); //.Insert(8, " ");
+                            tempStr = tempStr.Insert(9, " ");
                         }
                         else           // end of files in subdirectory, clear flags
                         {
@@ -1145,12 +1155,14 @@ namespace DiskUtility
                     }
                     if(f.fsize > 0 && !subDir)
                         tempStr = tempStr.Insert(8, "  ");
-
-                    listBoxFiles.Items.Add(string.Format("{0} {1,4} {2,9} {3} {4}", tempStr.PadRight(13,' '), f.fsize / 1024, f.flags, disk_file_entry.fDate, disk_file_entry.fTime));
+                    if (f.flags.Contains("Label")|| f.flags.Contains("Direct"))
+                        listBoxFiles.Items.Add(string.Format("{0} {1,4} {2,10} {3} {4}", tempStr.PadRight(13, ' '), "     ", f.flags, disk_file_entry.fDate, disk_file_entry.fTime));
+                      else
+                        listBoxFiles.Items.Add(string.Format("{0} {1,4} {2,10} {3} {4}", tempStr.PadRight(13,' '), f.fsize / 1024, f.flags, disk_file_entry.fDate, disk_file_entry.fTime));
                 }
             }
 
-            listBoxFiles.Items.Add("========  === ==== ========= ========== =======");
+            listBoxFiles.Items.Add("=========  === ==== ========== ========== =======");
             listBoxFiles.Items.Add(string.Format("Files {0}, Total {1,3:N0} K, Free {2,5:N0} K, Disk Size {3,5:N0} k",
                 diskFileCnt, diskUsed / 1024, (diskTotal - diskUsed) / 1024, diskTotal / 1024));
             listBoxFiles.Items.Add("");
@@ -1215,7 +1227,7 @@ namespace DiskUtility
         private void BtnView_Click(object sender, EventArgs e)
         {
             //  view file
-            FileViewerBorder.Visible = true;
+ 
             var idx = listBoxFiles.SelectedIndex;
             if (idx != -1)
                 foreach (DiskFileEntry entry in DiskFileList)
@@ -1224,6 +1236,8 @@ namespace DiskUtility
                         ViewFile(entry.DiskImageName, entry);
                         return;
                     }
+           
+            
         }
     //************************ View File ******************************************
         private void ViewFile(string disk_image_file, DiskFileEntry disk_file_entry)
