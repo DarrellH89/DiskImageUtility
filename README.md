@@ -87,3 +87,19 @@ There is no need to do anything special unless you are using a GNU/Linux compute
 *	2.3
     *	Support for running under Linux. Thanks hackerb9!
 
+*	Bugs
+	*	Disc image TC05.DOS.IMG doesn't display directory correctly
+*	2.4 NCR Branch
+	*	add support for NCR 320k CP/M format
+	*	Corrected bug in CP/M disk directory read function to test filename in upper case for IMG
+	*	hackerb9 pull request - create .exe that works on Windows and Linux
+	*	hackerb9 pull request Save settings C# way
+*	2.4 CPM-Erase
+	*	Added debug code to display the Allocation Blocks used by a CP/M file image
+	*	Enabled command line startup with 'D' to enable debug feature.
+	*	Added CP/M erase capability
+	*	Updated InsertFileHdos() to use var maxSector in place of LastGroupSector due to scope concern. LastGroupSector is used in class DirList
+	*	Corrected ReadHdosDir so that correct image size is returned
+	*	Corrected MS-DOS subdirectory processing to reset subDir Flag to false
+	*	Cleaned up File List Box Formatting related to subdirectories and Volume labels
+	*	Scans source directory after adding files to an image
