@@ -89,7 +89,7 @@ namespace DiskUtility
         private void Form1_Load(object sender, EventArgs e)
         {
             labelVersion.Text =
-                "Version 2.4 (20 Nov 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
+                "Version 2.4 (8 Dec 25) Disk Image Utility based on H8DUtilty"; // version number update Darrell Pelan
             // prev 1.2d1
 
             userSettings = new DiuUserSettings();
@@ -1606,7 +1606,10 @@ namespace DiskUtility
         return dialogResult;
     }
 
+        private void listBoxImages_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
+        }
     }
 
 }

@@ -59,11 +59,12 @@ namespace DiskUtility
             // 
             this.listBoxImages.FormattingEnabled = true;
             this.listBoxImages.HorizontalScrollbar = true;
-            this.listBoxImages.Location = new System.Drawing.Point(2, 29);
+            this.listBoxImages.Location = new System.Drawing.Point(2, 22);
             this.listBoxImages.Name = "listBoxImages";
             this.listBoxImages.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.listBoxImages.Size = new System.Drawing.Size(306, 433);
             this.listBoxImages.TabIndex = 0;
+            this.listBoxImages.SelectedIndexChanged += new System.EventHandler(this.listBoxImages_SelectedIndexChanged);
             // 
             // listBoxFiles
             // 

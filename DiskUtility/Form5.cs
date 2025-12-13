@@ -91,7 +91,10 @@ namespace DiskUtility
                 {
                     string file_name;
                     file_name = Path.GetFileName(files);
-                    listBox1.Items.Add(file_name);
+                    if( fileStart =='D' && file_name.ToUpper().EndsWith(".DOS.IMG"))
+                          listBox1.Items.Add(file_name);
+                      else if(fileStart != 'D')
+                          listBox1.Items.Add(file_name);
                     string file_count = string.Format("{0} disk images", listBox1.Items.Count.ToString());
                     //label4.Text = file_count;
                 }
@@ -110,7 +113,8 @@ namespace DiskUtility
             if (folderBrowserDialog1.ShowDialog() == DialogResult.OK)
                 {
                 tbFolder.Text = folderBrowserDialog1.SelectedPath;
-                buttonFolder_Init('C');
+                Refresh();
+                buttonFolder_Init(start);
                 }
 
             }
@@ -127,6 +131,7 @@ namespace DiskUtility
                     btnH80_640.Enabled = false;
                     btnH40_400.Enabled = false;
                     btnH40_100.Enabled = false;
+                    btnNCR.Enabled = true;
                     break;
                 case 'H':
                     btnH8d100.Enabled = false;
@@ -141,7 +146,10 @@ namespace DiskUtility
                     btnDOS_720.Enabled= false;
                     btnDOS_1440.Enabled = false;
                     btnRC2014_720.Enabled = false;
+                    btnRC2014_1440.Enabled = false;
                     btnDOS_320.Enabled = false;
+                    btnNCR.Enabled = false;
+                    btnNCR.Enabled = false;
                     break;
                 case 'D':
                     btnH8d100.Enabled = false;
@@ -156,6 +164,8 @@ namespace DiskUtility
                     btnH40_400.Enabled = false;
                     btnH40_100.Enabled = false;
                     btnRC2014_720.Enabled=false;
+                    btnRC2014_1440.Enabled = false;
+                    btnNCR.Enabled = false;
                     break;
             }
         }
@@ -378,7 +388,7 @@ namespace DiskUtility
 
         /******************** File Create File for CP/M *******************************/
             /* Input disk type - really the index to the to the CP/M file type data array
-               Requ9ires update if DiskType table has rows added
+               ************* Requires update if DiskType table has rows added **********************
              */
             private void fileCreate(int diskType, string fileName)
             {
@@ -537,8 +547,8 @@ namespace DiskUtility
                 {
                     MessageBox.Show("Error writing to file: " + ex.Message, "CP/M Insert", MessageBoxButtons.OK);
                 }
-                buttonFolder_Init(start);
             }
+            buttonFolder_Init(start);
 
         }
         /*
@@ -548,21 +558,23 @@ namespace DiskUtility
         private void insertMessage(int fileCnt, int filesSkipped, int filesFull, string cap)
         {
             var message = "";
-            if (fileCnt > 0)
+            if (fileCnt >= 0)
                 message += string.Format("{0} file(s) Added", fileCnt);
-            if(message.Length > 0 && filesSkipped>0)
+            if(message.Length > 0 && filesSkipped>=0)
                     message+= string.Format(", ");
-            if (filesSkipped > 0)
+            if (filesSkipped >= 0)
                 message += string.Format("{0} files(s) skipped", filesSkipped);
             if (message.Length > 0 && filesFull > 0)
                 message += string.Format(", ");
-            if (filesFull >0)
+            if (filesFull > 0)
                 message += string.Format("{0} file(s) not added due to full disk", filesFull);
             MessageBox.Show(this, message, cap);
         }
         /*
         /******************** File Create File for MS-DOS *******************************/
-        /* Input: disk size - used to determine media type in file type data array
+        /* Input: 
+         *      disk size - used to determine media type in file type data array
+         *      fileName - filename of image to create or add files to
 
          */
         private void fileCreateDos(int diskSize, string fileName)
@@ -597,7 +609,7 @@ namespace DiskUtility
 
             if (!result)                // create blank file image
             {
-                var ctr = 0;
+               var ctr = 0;
                var ds = diskSize * 1024;
                 for (; ctr < getDos.DiskType.GetLength(0); ctr++)
                     if (ds == getDos.DiskType[ctr, 6]* getDos.DiskType[ctr, 12])

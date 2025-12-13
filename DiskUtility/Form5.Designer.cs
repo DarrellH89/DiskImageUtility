@@ -53,7 +53,7 @@
             this.btnRC2014_720 = new System.Windows.Forms.Button();
             this.btnDOS_320 = new System.Windows.Forms.Button();
             this.btnRC2014_1440 = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnNCR = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // buttonFolder
@@ -305,22 +305,22 @@
             this.btnRC2014_1440.UseVisualStyleBackColor = true;
             this.btnRC2014_1440.Click += new System.EventHandler(this.btnRC2014_1440_Click);
             // 
-            // button1
+            // btnNCR
             // 
-            this.button1.Location = new System.Drawing.Point(440, 463);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(130, 21);
-            this.button1.TabIndex = 27;
-            this.button1.Text = "NCR 320K";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.btnNCR_320);
+            this.btnNCR.Location = new System.Drawing.Point(440, 463);
+            this.btnNCR.Name = "btnNCR";
+            this.btnNCR.Size = new System.Drawing.Size(130, 21);
+            this.btnNCR.TabIndex = 27;
+            this.btnNCR.Text = "NCR 320K";
+            this.btnNCR.UseVisualStyleBackColor = true;
+            this.btnNCR.Click += new System.EventHandler(this.btnNCR_320);
             // 
             // Form5
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(758, 557);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnNCR);
             this.Controls.Add(this.btnRC2014_1440);
             this.Controls.Add(this.btnDOS_320);
             this.Controls.Add(this.btnRC2014_720);
@@ -380,6 +380,6 @@
         private System.Windows.Forms.Button btnRC2014_720;
         private System.Windows.Forms.Button btnDOS_320;
         private System.Windows.Forms.Button btnRC2014_1440;
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnNCR;
     }
     }
